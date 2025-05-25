@@ -149,14 +149,9 @@ h1 {
     }
 }
 .auto-cookie {
-    position: absolute;
     font-size: 16px;
     pointer-events: none;
-    user-select: none;
     transition: transform 1s ease-out, opacity 1s ease-out;
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-    z-index: 999;
 }
 #eventBox {
     position: fixed;
@@ -215,14 +210,12 @@ h1 {
     text-align: center;
     display: none;
 }
-#settingsMenu label {
-    margin-right: 8px;
-}
 #settingsMenu input[type="range"] {
+    margin-top: 10px;
     vertical-align: middle;
 }
 #settingsMenu button {
-    margin-top: 10px;
+    margin-top: 15px;
     background: linear-gradient(145deg, #e6b800, #c89200);
     box-shadow: 0 4px #996f00;
     border: none;
@@ -281,4 +274,8 @@ input[type=range]::-ms-thumb {
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+#volumeSection {
+    color: #fff8dc; 
+    text-shadow: 1px 1px 3px #000;
 }

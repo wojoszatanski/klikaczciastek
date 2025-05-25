@@ -11,6 +11,9 @@
   // --- Nowy licznik ciastek upieczonych w sesji ---
   let cookiesBakedThisAscension = 0;
 
+  // --- Licznik całkowitej liczby ciastek zdobytych z kliknięć ---
+  let totalFromClicks = 0;
+
   // --- Referencje do elementów ---
   const cookieBtn = document.getElementById('cookieBtn');
   const countEl = document.getElementById('count');
@@ -62,26 +65,54 @@
 
   // --- Osiągnięcia ---
   const achievements = [
-    { id: 'firstCookie', name: 'Pierwsze ciastko', condition: () => count >= 1, unlocked: false },
-    { id: 'clickMaster', name: 'Mistrz kliknięć', condition: () => clickValue >= 10, unlocked: false },
-    { id: 'cookieTycoon', name: 'Ciastkowy magnat', condition: () => count >= 1000, unlocked: false },
+    { id: 'firstCookie', name: 'Pierwsze ciastko', description: 'Zdobądź pierwsze ciastko', condition: () => count >= 1, unlocked: false },
+    { id: 'clickMaster', name: 'Mistrz kliknięć', description: 'Zwiększ wartość kliknięcia do co najmniej 10', condition: () => clickValue >= 10, unlocked: false },
+    { id: 'cookieTycoon', name: 'Ciastkowy magnat', description: 'Zdobądź 1000 ciastek jednocześnie', condition: () => count >= 1000, unlocked: false },
     // Nowe osiągnięcia "Bake X cookies in one ascension" - sesji:
-    { id: 'wakeAndBake', name: 'Obudź się i piecz', condition: () => cookiesBakedThisAscension >= 1, unlocked: false },
-    { id: 'makingSomeDough', name: 'Trochę ciasta', condition: () => cookiesBakedThisAscension >= 1e3, unlocked: false },
-    { id: 'soBakedRightNow', name: 'Totalnie upieczony', condition: () => cookiesBakedThisAscension >= 1e5, unlocked: false },
-    { id: 'fledglingBakery', name: 'Młoda piekarnia', condition: () => cookiesBakedThisAscension >= 1e6, unlocked: false },
-    { id: 'affluentBakery', name: 'Bogata piekarnia', condition: () => cookiesBakedThisAscension >= 1e8, unlocked: false },
-    { id: 'worldFamousBakery', name: 'Światowej sławy piekarnia', condition: () => cookiesBakedThisAscension >= 1e9, unlocked: false },
-    { id: 'cosmicBakery', name: 'Kosmiczna piekarnia', condition: () => cookiesBakedThisAscension >= 1e11, unlocked: false },
-    { id: 'galacticBakery', name: 'Galaktyczna piekarnia', condition: () => cookiesBakedThisAscension >= 1e12, unlocked: false },
-    { id: 'universalBakery', name: 'Uniwersalna piekarnia', condition: () => cookiesBakedThisAscension >= 1e14, unlocked: false },
-    { id: 'timelessBakery', name: 'Ponadczasowa piekarnia', condition: () => cookiesBakedThisAscension >= 1e15, unlocked: false },
-    { id: 'infiniteBakery', name: 'Nieskończona piekarnia', condition: () => cookiesBakedThisAscension >= 1e17, unlocked: false },
-    { id: 'immortalBakery', name: 'Nieśmiertelna piekarnia', condition: () => cookiesBakedThisAscension >= 1e18, unlocked: false },
-    { id: 'dontStopMeNow', name: 'Nie zatrzymasz mnie', condition: () => cookiesBakedThisAscension >= 1e20, unlocked: false },
-    { id: 'youCanStopNow', name: 'Możesz przestać', condition: () => cookiesBakedThisAscension >= 1e21, unlocked: false },
-    { id: 'cookiesAllTheWayDown', name: 'Ciasteczka wszędzie', condition: () => cookiesBakedThisAscension >= 1e23, unlocked: false },
-    { id: 'overdose', name: 'Przedawkowanie', condition: () => cookiesBakedThisAscension >= 1e24, unlocked: false }
+    { id: 'wakeAndBake', name: 'Obudź się i piecz', description: 'Upiecz 1 ciastko podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1, unlocked: false },
+    { id: 'makingSomeDough', name: 'Trochę ciasta', description: 'Upiecz 1 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e3, unlocked: false },
+    { id: 'soBakedRightNow', name: 'Totalnie upieczony', description: 'Upiecz 100 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e5, unlocked: false },
+    { id: 'fledglingBakery', name: 'Młoda piekarnia', description: 'Upiecz 1 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e6, unlocked: false },
+    { id: 'affluentBakery', name: 'Bogata piekarnia', description: 'Upiecz 100 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e8, unlocked: false },
+    { id: 'worldFamousBakery', name: 'Światowej sławy piekarnia', description: 'Upiecz 1 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e9, unlocked: false },
+    { id: 'cosmicBakery', name: 'Kosmiczna piekarnia', description: 'Upiecz 100 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e11, unlocked: false },
+    { id: 'galacticBakery', name: 'Galaktyczna piekarnia', description: 'Upiecz 1 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e12, unlocked: false },
+    { id: 'universalBakery', name: 'Uniwersalna piekarnia', description: 'Upiecz 100 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e14, unlocked: false },
+    { id: 'timelessBakery', name: 'Ponadczasowa piekarnia', description: 'Upiecz 1 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e15, unlocked: false },
+    { id: 'infiniteBakery', name: 'Nieskończona piekarnia', description: 'Upiecz 100 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e17, unlocked: false },
+    { id: 'immortalBakery', name: 'Nieśmiertelna piekarnia', description: 'Upiecz 1 000 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e18, unlocked: false },
+    { id: 'dontStopMeNow', name: 'Nie zatrzymasz mnie', description: 'Upiecz 100 000 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e20, unlocked: false },
+    { id: 'youCanStopNow', name: 'Możesz przestać', description: 'Upiecz 1 000 000 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e21, unlocked: false },
+    { id: 'cookiesAllTheWayDown', name: 'Ciasteczka wszędzie', description: 'Upiecz 100 000 000 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e23, unlocked: false },
+    { id: 'overdose', name: 'Przedawkowanie', description: 'Upiecz 1 000 000 000 000 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e24, unlocked: false },
+
+    // Osiągnięcia CPS (ciastek na sekundę)
+    { id: 'casualBaking', name: 'Luźne pieczenie', description: 'Piecz 1 ciastko na sekundę', condition: () => cps * eventMultiplier >= 1, unlocked: false },
+    { id: 'hardcoreBaking', name: 'Hardkorowe pieczenie', description: 'Piecz 10 ciastek na sekundę', condition: () => cps * eventMultiplier >= 10, unlocked: false },
+    { id: 'steadyStream', name: 'Stały, smaczny strumień', description: 'Piecz 100 ciastek na sekundę', condition: () => cps * eventMultiplier >= 100, unlocked: false },
+    { id: 'cookieMonster', name: 'Potwór na ciastka', description: 'Piecz 1 000 ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e3, unlocked: false },
+    { id: 'massProducer', name: 'Masowy producent', description: 'Piecz 10 000 ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e4, unlocked: false },
+    { id: 'cookieVortex', name: 'Wir ciastek', description: 'Piecz 1 milion ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e6, unlocked: false },
+    { id: 'cookiePulsar', name: 'Ciasteczkowy pulsar', description: 'Piecz 10 milionów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e7, unlocked: false },
+    { id: 'cookieQuasar', name: 'Ciasteczkowy kwazar', description: 'Piecz 100 milionów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e8, unlocked: false },
+    { id: 'stillHere', name: 'O, nadal tu jesteś', description: 'Piecz 1 miliard ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e9, unlocked: false },
+    { id: 'neverBakeAgain', name: 'Nigdy więcej pieczenia', description: 'Piecz 10 miliardów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e10, unlocked: false },
+    { id: 'cookieWorld', name: 'Świat pełen ciastek', description: 'Piecz 1 bilion ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e12, unlocked: false },
+    { id: 'backToTheFuture', name: 'Gdy ta maszyna osiągnie 36 biliardów ciastek na godzinę...', description: 'Piecz 10 bilionów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e13, unlocked: false },
+    { id: 'fastAndDelicious', name: 'Szybkie i pyszne', description: 'Piecz 100 bilionów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e14, unlocked: false },
+    { id: 'cookieHertz', name: 'Ciasteczkowy herc', description: 'Piecz 1 biliard ciastek na sekundę. "Smaczniejsze niż pączek z hercem."', condition: () => cps * eventMultiplier >= 1e15, unlocked: false },
+    { id: 'solveHunger', name: 'Ups, rozwiązałeś głód na świecie', description: 'Piecz 10 biliardów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e16, unlocked: false },
+
+    // Osiągnięcia kliknięć
+    { id: 'clicktastic', name: 'Klikastyczne', description: 'Zdobądź 1 000 ciastek z kliknięć', condition: () => totalFromClicks >= 1e3, unlocked: false },
+    { id: 'clickathlon', name: 'Klikatlon', description: 'Zdobądź 100 000 ciastek z kliknięć', condition: () => totalFromClicks >= 1e5, unlocked: false },
+    { id: 'clickolympics', name: 'Klikolimpiada', description: 'Zdobądź 10 milionów ciastek z kliknięć', condition: () => totalFromClicks >= 1e7, unlocked: false },
+    { id: 'clickorama', name: 'Klikorama', description: 'Zdobądź 1 miliard ciastek z kliknięć', condition: () => totalFromClicks >= 1e9, unlocked: false },
+    { id: 'clickasmic', name: 'Klikazmiczne', description: 'Zdobądź 100 miliardów ciastek z kliknięć', condition: () => totalFromClicks >= 1e11, unlocked: false },
+    { id: 'clickageddon', name: 'Klikagedon', description: 'Zdobądź 10 bilionów ciastek z kliknięć', condition: () => totalFromClicks >= 1e13, unlocked: false },
+    { id: 'clicknarok', name: 'Kliknarok', description: 'Zdobądź 1 biliard ciastek z kliknięć', condition: () => totalFromClicks >= 1e15, unlocked: false },
+    { id: 'clickastrophe', name: 'Klikastrofa', description: 'Zdobądź 100 biliardów ciastek z kliknięć', condition: () => totalFromClicks >= 1e17, unlocked: false },
+    { id: 'clickataclysm', name: 'Klikataklizm', description: 'Zdobądź 10 tryliardów ciastek z kliknięć', condition: () => totalFromClicks >= 1e19, unlocked: false }
   ];
 
   // --- Wyświetlanie ulepszeń ---
@@ -141,6 +172,7 @@
   cookieBtn.addEventListener('click', e => {
     count += clickValue;
     cookiesBakedThisAscension += clickValue;
+    totalFromClicks += clickValue;
     createFlyingCookie(e.clientX, e.clientY);
     updateDisplay();
     checkAchievements();
@@ -164,36 +196,38 @@
     checkAchievements();
   }
 
-  // --- Nowa funkcja do animacji automatycznych ciastek ---
-  function createAutoCookieAnimation(numCookies) {
-    const buttonRect = cookieBtn.getBoundingClientRect();
-    const centerX = buttonRect.left + buttonRect.width / 2;
-    const centerY = buttonRect.top + buttonRect.height / 2;
+function createAutoCookieAnimation(numCookies) {
+  const buttonRect = cookieBtn.getBoundingClientRect();
+  const offsetParent = cookieBtn.offsetParent;
+  const parentRect = offsetParent.getBoundingClientRect();
 
-    for (let i = 0; i < numCookies; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * 50 + 50;
-      const deltaX = Math.cos(angle) * distance;
-      const deltaY = Math.sin(angle) * distance;
+  // współrzędne względem offsetParent
+  const centerX = cookieBtn.offsetLeft + cookieBtn.offsetWidth / 2;
+  const centerY = cookieBtn.offsetTop + cookieBtn.offsetHeight / 2;
 
-      const cookie = document.createElement('div');
-      cookie.className = 'auto-cookie';
-      cookie.style.left = `${centerX}px`;
-      cookie.style.top = `${centerY}px`;
-      cookie.textContent = '🍪';
-      
-      document.body.appendChild(cookie);
+  for (let i = 0; i < numCookies; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * 50 + 50;
+    const deltaX = Math.cos(angle) * distance;
+    const deltaY = Math.sin(angle) * distance;
 
-      requestAnimationFrame(() => {
-        cookie.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.5)`;
-        cookie.style.opacity = '0';
-      });
+    const cookie = document.createElement('div');
+    cookie.className = 'auto-cookie';
+    cookie.style.position = 'absolute';
+    cookie.style.left = `${centerX}px`;
+    cookie.style.top = `${centerY}px`;
+    cookie.textContent = '🍪';
 
-      setTimeout(() => cookie.remove(), 1000);
-    }
+    offsetParent.appendChild(cookie); // zamiast document.body
+
+    requestAnimationFrame(() => {
+      cookie.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.5)`;
+      cookie.style.opacity = '0';
+    });
+
+    setTimeout(() => cookie.remove(), 1000);
   }
-
-
+}
 
   // --- Aktualizacja wyświetlanych wartości ---
   function updateDisplay() {
@@ -292,7 +326,15 @@
     achievements.forEach(ach => {
       const div = document.createElement('div');
       div.className = 'achievement' + (ach.unlocked ? ' unlocked' : '');
-      div.textContent = ach.name + (ach.unlocked ? ' ✓' : '');
+      const title = document.createElement('div');
+    title.textContent = ach.name + (ach.unlocked ? ' ✓' : '');
+    const description = document.createElement('div');
+    description.textContent = ach.description;
+    description.style.fontSize = '12px';
+    description.style.color = '#88cc88';
+    div.appendChild(title);
+    div.appendChild(description);
+      div.title = ach.description;
       achievementsList.appendChild(div);
     });
   }
@@ -344,6 +386,10 @@
         settingsMenu.style.display = isVisible ? 'none' : 'block';
     });
 
+    document.getElementById('closeSettings').addEventListener('click', function() {
+      document.getElementById('settingsMenu').style.display = 'none';
+    });
+
     enableMusicButton.addEventListener('click', () => {
         backgroundMusic.play().then(() => {
             volumeSection.style.display = 'block';
@@ -352,16 +398,16 @@
     });
 
   
-  // --- Pętla gry ---
-  setInterval(() => {
-    addCookiesPerSecond();
-    startRandomEvent();
-  }, 100);
-  
-  setInterval(() => {
-    playTimeSeconds++;
-    updateDisplay();
-  }, 1000);
+// --- Pętla gry ---
+setInterval(() => {
+  addCookiesPerSecond();
+  startRandomEvent();
+}, 100);
+
+setInterval(() => {
+  playTimeSeconds++;
+  updateDisplay();
+}, 1000);
 
 // --- Inicjalizacja ---
 renderUpgrades();
