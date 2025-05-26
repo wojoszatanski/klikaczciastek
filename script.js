@@ -4,7 +4,7 @@
   let clickValue = 1;
   let eventMultiplier = 1;
   let eventActive = false;
-  let accumulatedCookies = 0; // Nowa zmienna do śledzenia ciastek na sekundę
+  let accumulatedCookies = 0;
   let playTimeSeconds = 0;
   let lastSaveTime = null;
 
@@ -37,11 +37,46 @@
   });
   const muteButton = document.getElementById('muteButton');
   const clickSound = document.getElementById('clickSound');
+  const buySound = document.getElementById('buySound');
+  const achievementSound = document.getElementById('achievementSound');
+  const eventSound = document.getElementById('eventSound');
+  const effectsMuteButton = document.getElementById('effectsMuteButton');
+
+  // --- Referencje do kontrolek głośności ---
+const effectsVolumeControl = document.getElementById('effectsVolumeControl');
+
+// --- Ustawienia początkowe głośności ---
+[clickSound, buySound, achievementSound, eventSound].forEach(sound => {
+  sound.volume = effectsVolumeControl.value;
+});
+
+// --- Obsługa zmian głośności efektów ---
+effectsVolumeControl.addEventListener('input', () => {
+  [clickSound, buySound, achievementSound, eventSound].forEach(sound => {
+    sound.volume = effectsVolumeControl.value;
+  });
+});
 
   cookieBtn.addEventListener('click', () => {
       clickSound.currentTime = 0; // Resetuj dźwięk, aby można było go odtworzyć wielokrotnie
       clickSound.play();
     });
+
+// --- Obsługa wyciszenia efektów ---
+effectsMuteButton.addEventListener('click', () => {
+  const isMuted = clickSound.muted;
+  [clickSound, buySound, achievementSound, eventSound].forEach(sound => {
+    sound.muted = !isMuted;
+  });
+  effectsMuteButton.textContent = isMuted ? 'Wycisz efekty' : 'Odcisz efekty';
+});
+
+// --- Inicjalizacja stanu przycisku ---
+// (Dodaj w miejscu gdzie inicjalizujesz inne elementy)
+[clickSound, buySound, achievementSound, eventSound].forEach(sound => {
+  sound.muted = false;
+});
+effectsMuteButton.textContent = 'Wycisz efekty';
 
   // --- Ulepszenia produkcji ---
   const upgrades = [
@@ -151,6 +186,8 @@
           clickValue += upgrade.clickValue;
           upgrade.cost = Math.ceil(upgrade.cost * 2.5);
         }
+        buySound.currentTime = 0; // Resetuj dźwięk
+        buySound.play();
         updateDisplay();
         renderUpgrades();
         checkAchievements();
@@ -289,6 +326,9 @@ function createAutoCookieAnimation(numCookies) {
     if(rand < 0.01) { // 1% szans na event
       eventActive = true;
       eventMultiplier = 2;
+      const eventSound = document.getElementById('eventSound');
+      eventSound.currentTime = 0;
+      eventSound.play()
       showEvent('Wydarzenie: Podwójne ciastka przez 10 sekund!');
       setTimeout(() => {
         eventMultiplier = 1;
@@ -316,6 +356,8 @@ function createAutoCookieAnimation(numCookies) {
       if(!ach.unlocked && ach.condition()) {
         ach.unlocked = true;
         changed = true;
+        achievementSound.currentTime = 0; // Resetuj dźwięk
+        achievementSound.play();
         showEvent(`Osiągnięcie odblokowane: ${ach.name}!`);
       }
     });
