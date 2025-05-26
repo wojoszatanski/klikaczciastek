@@ -17,14 +17,13 @@ h1 {
     text-shadow: 1px 1px 5px #000;
 }
 #cookieBtn {
-    font-size: 72px;
+    font-size: 100px;
     background: radial-gradient(circle at center, #f9d976 0%, #f39c12 80%);
     border-radius: 50%;
     border: 6px solid #d68f00;
     box-shadow: 0 6px 10px rgba(0,0,0,0.5), inset 0 4px 6px #fdf5d1;
-    width: 130px;
-    height: 130px;
-    line-height: 130px;
+    width: 150px;
+    height: 150px;
     user-select: none;
     transition: transform 0.1s ease;
     margin: 25px 0;
@@ -108,7 +107,7 @@ h1 {
     border: 2px solid #4caf50cc;
     border-radius: 15px;
     padding: 15px;
-    max-height: 180px;
+    max-height: 440px;
     overflow-y: auto;
     text-align: left;
     color: #2e7d32;
@@ -215,7 +214,6 @@ h1 {
     vertical-align: middle;
 }
 #settingsMenu button {
-    margin-top: 15px;
     background: linear-gradient(145deg, #e6b800, #c89200);
     box-shadow: 0 4px #996f00;
     border: none;
@@ -227,6 +225,13 @@ h1 {
 }
 #settingsMenu button:hover {
     background: linear-gradient(145deg, #ffd93b, #e6b800);
+}
+#resetProgress {
+    background: linear-gradient(145deg, #ff5c5c, #cc0000) !important;
+    box-shadow: 0 4px #990000 !important;
+}
+#resetProgress:hover {
+    background: linear-gradient(145deg, #ff7777, #cc0000) !important;
 }
 #settingsToggle {
     background: linear-gradient(145deg, #e6b800, #c89200);
@@ -275,7 +280,7 @@ input[type=range]::-ms-thumb {
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
-#volumeSection {
+#volumeSection, #saveSection {
     color: #fff8dc; 
     text-shadow: 1px 1px 3px #000;
 }

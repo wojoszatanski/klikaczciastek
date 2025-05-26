@@ -6,6 +6,7 @@
   let eventActive = false;
   let accumulatedCookies = 0; // Nowa zmienna do śledzenia ciastek na sekundę
   let playTimeSeconds = 0;
+  let lastSaveTime = null;
 
 
   // --- Nowy licznik ciastek upieczonych w sesji ---
@@ -397,7 +398,198 @@ function createAutoCookieAnimation(numCookies) {
         });
     });
 
+function saveGame() {
+  const gameState = {
+    count: count,
+    cps: cps,
+    clickValue: clickValue,
+    upgrades: upgrades.map(upg => ({ id: upg.id, count: upg.count, cost: upg.cost })),
+    cursorUpgrades: cursorUpgrades.map(upg => ({ id: upg.id, count: upg.count, cost: upg.cost })),
+    achievements: achievements.map(ach => ({ id: ach.id, unlocked: ach.unlocked })),
+    playTimeSeconds: playTimeSeconds,
+    cookiesBakedThisAscension: cookiesBakedThisAscension,
+    totalFromClicks: totalFromClicks,
+    bakeryName: bakeryOwnerEl.textContent,
+    lastSaveTime: new Date().getTime()
+  };
   
+  localStorage.setItem('cookieClickerSave', JSON.stringify(gameState));
+  lastSaveTime = gameState.lastSaveTime;
+  updateLastSaveTimeDisplay();
+}
+
+function loadGame() {
+  const savedData = localStorage.getItem('cookieClickerSave');
+  if (!savedData) return false;
+
+  try {
+    const gameState = JSON.parse(savedData);
+    
+    // Ładowanie podstawowych wartości
+    count = gameState.count || 0;
+    cps = gameState.cps || 0;
+    clickValue = gameState.clickValue || 1;
+    playTimeSeconds = gameState.playTimeSeconds || 0;
+    cookiesBakedThisAscension = gameState.cookiesBakedThisAscension || 0;
+    totalFromClicks = gameState.totalFromClicks || 0;
+    lastSaveTime = gameState.lastSaveTime || null;
+
+    // Ładowanie ulepszeń
+    gameState.upgrades.forEach(savedUpg => {
+      const upg = upgrades.find(u => u.id === savedUpg.id);
+      if (upg) {
+        upg.count = savedUpg.count;
+        upg.cost = savedUpg.cost;
+      }
+    });
+
+    // Ładowanie ulepszeń kliknięć
+    gameState.cursorUpgrades.forEach(savedUpg => {
+      const upg = cursorUpgrades.find(u => u.id === savedUpg.id);
+      if (upg) {
+        upg.count = savedUpg.count;
+        upg.cost = savedUpg.cost;
+      }
+    });
+
+    // Ładowanie osiągnięć
+    gameState.achievements.forEach(savedAch => {
+      const ach = achievements.find(a => a.id === savedAch.id);
+      if (ach) {
+        ach.unlocked = savedAch.unlocked;
+      }
+    });
+
+    // Aktualizacja UI
+    setBakeryName(gameState.bakeryName || generateRandomName());
+    updateDisplay();
+    renderUpgrades();
+    renderAchievements();
+    updateLastSaveTimeDisplay();
+    
+    return true;
+  } catch (e) {
+    console.error('Błąd wczytywania zapisu:', e);
+    return false;
+  }
+}
+
+function updateLastSaveTimeDisplay() {
+  const lastSaveTimeEl = document.getElementById('lastSaveTime');
+  if (lastSaveTime) {
+    const date = new Date(lastSaveTime);
+    lastSaveTimeEl.textContent = date.toLocaleString();
+  } else {
+    lastSaveTimeEl.textContent = 'Nigdy';
+  }
+}
+
+// Funkcje eksportu/importu
+document.getElementById('exportProgress').addEventListener('click', () => {
+  const gameState = JSON.parse(localStorage.getItem('cookieClickerSave') || '{}');
+  const dataStr = JSON.stringify(gameState, null, 2);
+  const blob = new Blob([dataStr], { type: 'text/plain' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cookie_clicker_save_${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+});
+
+document.getElementById('importProgress').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const gameState = JSON.parse(event.target.result);
+      localStorage.setItem('cookieClickerSave', JSON.stringify(gameState));
+      loadGame();
+      alert('Postęp został pomyślnie zaimportowany!');
+    } catch (error) {
+      alert('Błąd podczas wczytywania pliku: nieprawidłowy format pliku.');
+    }
+  };
+  reader.readAsText(file);
+});
+
+// Autozapis co 5 minut
+setInterval(saveGame, 5 * 60 * 1000);
+
+// Zapisz przy zamknięciu strony
+window.addEventListener('beforeunload', saveGame);
+
+// Dodaj obsługę przycisku resetowania gry
+document.getElementById('resetProgress').addEventListener('click', function() {
+    if (confirm('Czy na pewno chcesz zresetować grę? Wszystkie postępy zostaną utracone i nie będzie można ich przywrócić.')) {
+        resetGame();
+    }
+});
+
+function resetGame() {
+    // Resetuj wszystkie zmienne gry
+    count = 0;
+    cps = 0;
+    clickValue = 1;
+    eventMultiplier = 1;
+    eventActive = false;
+    accumulatedCookies = 0;
+    playTimeSeconds = 0;
+    cookiesBakedThisAscension = 0;
+    totalFromClicks = 0;
+    
+    // Resetuj ulepszenia produkcji
+    upgrades.forEach(upgrade => {
+        upgrade.count = 0;
+        upgrade.cost = upgrade.id === 'cursor' ? 15 : 
+                      upgrade.id === 'grandma' ? 100 : 
+                      upgrade.id === 'farm' ? 1100 : 
+                      upgrade.id === 'factory' ? 12000 : 
+                      upgrade.id === 'bank' ? 130000 : 
+                      upgrade.id === 'temple' ? 1400000 : 
+                      upgrade.id === 'wizardTower' ? 20000000 : 
+                      upgrade.id === 'shipment' ? 330000000 : 
+                      upgrade.id === 'alchemyLab' ? 5100000000 : 
+                      75000000000; // portal
+    });
+    
+    // Resetuj ulepszenia kliknięć
+    cursorUpgrades.forEach(upgrade => {
+        upgrade.count = 0;
+        upgrade.cost = upgrade.id === 'fingerStrength' ? 100 : 
+                      upgrade.id === 'doubleFinger' ? 1000 : 
+                      15000; // thirdFinger
+    });
+    
+    // Resetuj osiągnięcia
+    achievements.forEach(achievement => {
+        achievement.unlocked = false;
+    });
+    
+    // Resetuj nazwę piekarni
+    setBakeryName(generateRandomName());
+    
+    // Usuń zapis gry z localStorage
+    localStorage.removeItem('cookieClickerSave');
+    
+    // Zaktualizuj UI
+    updateDisplay();
+    renderUpgrades();
+    renderAchievements();
+    updateLastSaveTimeDisplay();
+    
+    // Wyświetl potwierdzenie
+    alert('Gra została zresetowana! Możesz zacząć od nowa.');
+}
+
 // --- Pętla gry ---
 setInterval(() => {
   addCookiesPerSecond();
@@ -414,3 +606,4 @@ renderUpgrades();
 updateDisplay();
 renderAchievements();
 setBakeryName(generateRandomName());
+loadGame();
