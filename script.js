@@ -199,6 +199,8 @@ cookieBtn.addEventListener('click', e => {
   cookiesBakedThisAscension += actualClickValue;
   totalFromClicks += actualClickValue;
   createFlyingCookie(e.clientX, e.clientY, clickValue);
+  clickSound.currentTime = 0; // Resetuj dźwięk na początek
+  clickSound.play(); // Odtwórz dźwięk kliknięcia
   updateDisplay();
   checkAchievements();
 });
