@@ -1,6 +1,10 @@
 {
   "name": "Klikacz Ciastek",
   "short_name": "Klikacz Ciastek",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#d68f00",
+  "background_color": "#f5dba7",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -14,8 +18,5 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ],
-  "theme_color": "#d68f00",
-  "background_color": "#f5dba7",
-  "display": "standalone"
+  ]
 }
