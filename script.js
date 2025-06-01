@@ -14,6 +14,26 @@ let cookiesBakedThisAscension = 0;
 // --- Licznik całkowitej liczby ciastek zdobytych z kliknięć ---
 let totalFromClicks = 0;
 
+// --- Zmienne prestiżu ---
+let heavenlyChips = 0;
+let heavenlyChipsThisAscension = 0;
+let ascensionCount = 0;
+const ASCENSION_THRESHOLD = 1000000; // Minimalna liczba ciastek w sesji do ascension
+
+// --- Ulepszenia prestiżowe ---
+const heavenlyUpgrades = [
+  { id: 'hc1', name: 'Boski Palec', description: '+1 do wartości kliknięcia na zawsze', cost: 1, effect: { clickValue: 1 }, purchased: false },
+  { id: 'hc2', name: 'Niebiańska Receptura', description: '+1% do ciastek na sekundę na zawsze', cost: 5, effect: { cpsMultiplier: 0.01 }, purchased: false },
+  { id: 'hc3', name: 'Cudowny Ferment', description: '+5% do ciastek na sekundę na zawsze', cost: 20, effect: { cpsMultiplier: 0.05 }, purchased: false },
+  { id: 'hc4', name: 'Anielskie Ciasto', description: '+10% do ciastek na sekundę na zawsze', cost: 50, effect: { cpsMultiplier: 0.1 }, purchased: false },
+  { id: 'hc5', name: 'Boskiego Dotyku', description: '+10 do wartości kliknięcia na zawsze', cost: 100, effect: { clickValue: 10 }, purchased: false },
+  { id: 'hc6', name: 'Niebiańska Inwestycja', description: 'Ulepszenia produkcji są tańsze o 5%', cost: 200, effect: { costReduction: 0.05 }, purchased: false },
+  { id: 'hc7', name: 'Rajskie Zbiory', description: 'Eventy losowe występują 50% częściej', cost: 500, effect: { eventChance: 0.5 }, purchased: false },
+  { id: 'hc8', name: 'Boska Cierpliwość', description: '+25% do ciastek na sekundę na zawsze', cost: 1000, effect: { cpsMultiplier: 0.25 }, purchased: false },
+  { id: 'hc9', name: 'Eonowe Doświadczenie', description: '+50% do ciastek na sekundę na zawsze', cost: 5000, effect: { cpsMultiplier: 0.5 }, purchased: false },
+  { id: 'hc10', name: 'Ostateczna Doskonałość', description: '+100% do ciastek na sekundę na zawsze', cost: 10000, effect: { cpsMultiplier: 1.0 }, purchased: false }
+];
+
 // --- Referencje do elementów ---
 const cookieBtn = document.getElementById('cookieBtn');
 const countEl = document.getElementById('count');
@@ -71,23 +91,23 @@ effectsMuteButton.textContent = 'Wycisz efekty';
 
 // --- Ulepszenia produkcji ---
 const upgrades = [
-  { id: 'cursor', name: 'Kursor', cost: 15, cps: 0.1, count: 0 },
-  { id: 'grandma', name: 'Babcia', cost: 100, cps: 1, count: 0 },
-  { id: 'farm', name: 'Farm', cost: 1100, cps: 8, count: 0 },
-  { id: 'factory', name: 'Fabryka', cost: 12000, cps: 47, count: 0 },
-  { id: 'bank', name: 'Bank', cost: 130000, cps: 260, count: 0 },
-  { id: 'temple', name: 'Świątynia', cost: 1400000, cps: 1400, count: 0 },
-  { id: 'wizardTower', name: 'Wieża czarodzieja', cost: 20000000, cps: 7800, count: 0 },
-  { id: 'shipment', name: 'Przesyłka', cost: 330000000, cps: 44000, count: 0 },
-  { id: 'alchemyLab', name: 'Laboratorium alchemiczne', cost: 5100000000, cps: 260000, count: 0 },
-  { id: 'portal', name: 'Portal', cost: 75000000000, cps: 1600000, count: 0 }
+  { id: 'cursor', name: 'Kursor', cost: 15, cps: 0.1, count: 0, initialCost: 15 },
+  { id: 'grandma', name: 'Babcia', cost: 100, cps: 1, count: 0, initialCost: 100 },
+  { id: 'farm', name: 'Farm', cost: 1100, cps: 8, count: 0, initialCost: 1100 },
+  { id: 'factory', name: 'Fabryka', cost: 12000, cps: 47, count: 0, initialCost: 12000 },
+  { id: 'bank', name: 'Bank', cost: 130000, cps: 260, count: 0, initialCost: 130000 },
+  { id: 'temple', name: 'Świątynia', cost: 1400000, cps: 1400, count: 0, initialCost: 1400000 },
+  { id: 'wizardTower', name: 'Wieża czarodzieja', cost: 20000000, cps: 7800, count: 0, initialCost: 20000000 },
+  { id: 'shipment', name: 'Przesyłka', cost: 330000000, cps: 44000, count: 0, initialCost: 330000000 },
+  { id: 'alchemyLab', name: 'Laboratorium alchemiczne', cost: 5100000000, cps: 260000, count: 0, initialCost: 5100000000 },
+  { id: 'portal', name: 'Portal', cost: 75000000000, cps: 1600000, count: 0, initialCost: 75000000000 }
 ];
 
 // --- Ulepszenia kliknięć ---
 const cursorUpgrades = [
-  { id: 'fingerStrength', name: 'Siła palca', cost: 100, clickValue: 1, count: 0 },
-  { id: 'doubleFinger', name: 'Podwójny palec', cost: 1000, clickValue: 5, count: 0 },
-  { id: 'thirdFinger', name: 'Trzeci palec', cost: 15000, clickValue: 10, count: 0 }
+  { id: 'fingerStrength', name: 'Siła palca', cost: 100, clickValue: 1, count: 0, initialCost: 100 },
+  { id: 'doubleFinger', name: 'Podwójny palec', cost: 1000, clickValue: 5, count: 0, initialCost: 1000 },
+  { id: 'thirdFinger', name: 'Trzeci palec', cost: 15000, clickValue: 10, count: 0, initialCost: 15000 }
 ];
 
 // --- Osiągnięcia ---
@@ -111,21 +131,21 @@ const achievements = [
   { id: 'youCanStopNow', name: 'Możesz przestać', description: 'Upiecz 1 000 000 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e21, unlocked: false },
   { id: 'cookiesAllTheWayDown', name: 'Ciasteczka wszędzie', description: 'Upiecz 100 000 000 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e23, unlocked: false },
   { id: 'overdose', name: 'Przedawkowanie', description: 'Upiecz 1 000 000 000 000 000 000 000 000 000 ciastek podczas jednej sesji', condition: () => cookiesBakedThisAscension >= 1e24, unlocked: false },
-  { id: 'casualBaking', name: 'Luźne pieczenie', description: 'Piecz 1 ciastko na sekundę', condition: () => cps * eventMultiplier >= 1, unlocked: false },
-  { id: 'hardcoreBaking', name: 'Hardkorowe pieczenie', description: 'Piecz 10 ciastek na sekundę', condition: () => cps * eventMultiplier >= 10, unlocked: false },
-  { id: 'steadyStream', name: 'Stały, smaczny strumień', description: 'Piecz 100 ciastek na sekundę', condition: () => cps * eventMultiplier >= 100, unlocked: false },
-  { id: 'cookieMonster', name: 'Potwór na ciastka', description: 'Piecz 1 000 ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e3, unlocked: false },
-  { id: 'massProducer', name: 'Masowy producent', description: 'Piecz 10 000 ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e4, unlocked: false },
-  { id: 'cookieVortex', name: 'Wir ciastek', description: 'Piecz 1 milion ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e6, unlocked: false },
-  { id: 'cookiePulsar', name: 'Ciasteczkowy pulsar', description: 'Piecz 10 milionów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e7, unlocked: false },
-  { id: 'cookieQuasar', name: 'Ciasteczkowy kwazar', description: 'Piecz 100 milionów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e8, unlocked: false },
-  { id: 'stillHere', name: 'O, nadal tu jesteś', description: 'Piecz 1 miliard ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e9, unlocked: false },
-  { id: 'neverBakeAgain', name: 'Nigdy więcej pieczenia', description: 'Piecz 10 miliardów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e10, unlocked: false },
-  { id: 'cookieWorld', name: 'Świat pełen ciastek', description: 'Piecz 1 bilion ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e12, unlocked: false },
-  { id: 'backToTheFuture', name: 'Gdy ta maszyna osiągnie 36 biliardów ciastek na godzinę...', description: 'Piecz 10 bilionów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e13, unlocked: false },
-  { id: 'fastAndDelicious', name: 'Szybkie i pyszne', description: 'Piecz 100 bilionów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e14, unlocked: false },
-  { id: 'cookieHertz', name: 'Ciasteczkowy herc', description: 'Piecz 1 biliard ciastek na sekundę. "Smaczniejsze niż pączek z hercem."', condition: () => cps * eventMultiplier >= 1e15, unlocked: false },
-  { id: 'solveHunger', name: 'Ups, rozwiązałeś głód na świecie', description: 'Piecz 10 biliardów ciastek na sekundę', condition: () => cps * eventMultiplier >= 1e16, unlocked: false },
+  { id: 'casualBaking', name: 'Luźne pieczenie', description: 'Piecz 1 ciastko na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1, unlocked: false },
+  { id: 'hardcoreBaking', name: 'Hardkorowe pieczenie', description: 'Piecz 10 ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 10, unlocked: false },
+  { id: 'steadyStream', name: 'Stały, smaczny strumień', description: 'Piecz 100 ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 100, unlocked: false },
+  { id: 'cookieMonster', name: 'Potwór na ciastka', description: 'Piecz 1 000 ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e3, unlocked: false },
+  { id: 'massProducer', name: 'Masowy producent', description: 'Piecz 10 000 ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e4, unlocked: false },
+  { id: 'cookieVortex', name: 'Wir ciastek', description: 'Piecz 1 milion ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e6, unlocked: false },
+  { id: 'cookiePulsar', name: 'Ciasteczkowy pulsar', description: 'Piecz 10 milionów ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e7, unlocked: false },
+  { id: 'cookieQuasar', name: 'Ciasteczkowy kwazar', description: 'Piecz 100 milionów ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e8, unlocked: false },
+  { id: 'stillHere', name: 'O, nadal tu jesteś', description: 'Piecz 1 miliard ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e9, unlocked: false },
+  { id: 'neverBakeAgain', name: 'Nigdy więcej pieczenia', description: 'Piecz 10 miliardów ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e10, unlocked: false },
+  { id: 'cookieWorld', name: 'Świat pełen ciastek', description: 'Piecz 1 bilion ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e12, unlocked: false },
+  { id: 'backToTheFuture', name: 'Gdy ta maszyna osiągnie 36 biliardów ciastek na godzinę...', description: 'Piecz 10 bilionów ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e13, unlocked: false },
+  { id: 'fastAndDelicious', name: 'Szybkie i pyszne', description: 'Piecz 100 bilionów ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e14, unlocked: false },
+  { id: 'cookieHertz', name: 'Ciasteczkowy herc', description: 'Piecz 1 biliard ciastek na sekundę. "Smaczniejsze niż pączek z hercem."', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e15, unlocked: false },
+  { id: 'solveHunger', name: 'Ups, rozwiązałeś głód na świecie', description: 'Piecz 10 biliardów ciastek na sekundę', condition: () => cps * eventMultiplier * getHeavenlyMultiplier() >= 1e16, unlocked: false },
   { id: 'clicktastic', name: 'Klikastyczne', description: 'Zdobądź 1 000 ciastek z kliknięć', condition: () => totalFromClicks >= 1e3, unlocked: false },
   { id: 'clickathlon', name: 'Klikatlon', description: 'Zdobądź 100 000 ciastek z kliknięć', condition: () => totalFromClicks >= 1e5, unlocked: false },
   { id: 'clickolympics', name: 'Klikolimpiada', description: 'Zdobądź 10 milionów ciastek z kliknięć', condition: () => totalFromClicks >= 1e7, unlocked: false },
@@ -134,17 +154,43 @@ const achievements = [
   { id: 'clickageddon', name: 'Klikagedon', description: 'Zdobądź 10 bilionów ciastek z kliknięć', condition: () => totalFromClicks >= 1e13, unlocked: false },
   { id: 'clicknarok', name: 'Kliknarok', description: 'Zdobądź 1 biliard ciastek z kliknięć', condition: () => totalFromClicks >= 1e15, unlocked: false },
   { id: 'clickastrophe', name: 'Klikastrofa', description: 'Zdobądź 100 biliardów ciastek z kliknięć', condition: () => totalFromClicks >= 1e17, unlocked: false },
-  { id: 'clickataclysm', name: 'Klikataklizm', description: 'Zdobądź 10 tryliardów ciastek z kliknięć', condition: () => totalFromClicks >= 1e19, unlocked: false }
+  { id: 'clickataclysm', name: 'Klikataklizm', description: 'Zdobądź 10 tryliardów ciastek z kliknięć', condition: () => totalFromClicks >= 1e19, unlocked: false },
+  { id: 'ascensionMaster', name: 'Mistrz Wniebowstąpienia', description: 'Dokonaj pierwszego Wniebowstąpienia', condition: () => ascensionCount >= 1, unlocked: false },
+  { id: 'heavenlyBaker', name: 'Niebiański Piekarz', description: 'Zdobądź 10 Niebiańskich Chipów', condition: () => heavenlyChips >= 10, unlocked: false },
+  { id: 'divineBaker', name: 'Boski Piekarz', description: 'Zdobądź 100 Niebiańskich Chipów', condition: () => heavenlyChips >= 100, unlocked: false },
+  { id: 'celestialBaker', name: 'Niebiański Mistrz', description: 'Zdobądź 1000 Niebiańskich Chipów', condition: () => heavenlyChips >= 1000, unlocked: false }
 ];
 
 // --- Wyświetlanie ulepszeń ---
 const upgradesDiv = document.getElementById('upgrades');
 const cursorUpgradesDiv = document.getElementById('cursorUpgrades');
+const ascensionMenu = document.getElementById('ascensionMenu');
 
 function formatNumber(num) {
-  if (num >= 1e9) return (num / 1e9).toFixed(2) + " mld";
-  if (num >= 1e6) return (num / 1e6).toFixed(2) + " mln";
-  if (num >= 1e3) return (num / 1e3).toFixed(2) + " tys.";
+  if (num < 1000) return Math.floor(num).toString();
+  
+  const suffixes = [
+    { value: 1e24, suffix: ' septylion' },
+    { value: 1e21, suffix: ' sekstylion' },
+    { value: 1e18, suffix: ' kwintylion' },
+    { value: 1e15, suffix: ' kwadrylion' },
+    { value: 1e12, suffix: ' trylion' },
+    { value: 1e9, suffix: ' mld' },
+    { value: 1e6, suffix: ' mln' },
+    { value: 1e3, suffix: ' tys.' }
+  ];
+
+  for (const { value, suffix } of suffixes) {
+    if (num >= value) {
+      const divided = num / value;
+      // Jeśli liczba jest całkowita, wyświetl bez miejsc po przecinku
+      if (Number.isInteger(divided)) {
+        return Math.floor(divided) + suffix;
+      }
+      // W przeciwnym razie wyświetl z 2 miejscami po przecinku
+      return divided.toFixed(2).replace(/\.?0+$/, '') + suffix;
+    }
+  }
   return Math.floor(num);
 }
 
@@ -152,17 +198,23 @@ function createUpgradeItem(upgrade, container, type) {
   const div = document.createElement('div');
   div.className = 'upgrade-item';
   const span = document.createElement('span');
+  
+  // Uwzględnij redukcję kosztów z ulepszeń prestiżowych
+  const costReduction = getHeavenlyCostReduction();
+  const actualCost = Math.ceil(upgrade.cost * (1 - costReduction));
+  
   if (type === 'production') {
-    span.textContent = `${upgrade.name} (x${upgrade.count}) - ${upgrade.cps.toFixed(1)} cps - koszt: ${formatNumber(upgrade.cost)} ciastek`;
+    span.textContent = `${upgrade.name} (x${upgrade.count}) - ${upgrade.cps.toFixed(1)} cps - koszt: ${formatNumber(actualCost)} ciastek`;
   } else if (type === 'click') {
-    span.textContent = `${upgrade.name} (x${upgrade.count}) - +${upgrade.clickValue} za klik - koszt: ${formatNumber(upgrade.cost)} ciastek`;
+    span.textContent = `${upgrade.name} (x${upgrade.count}) - +${upgrade.clickValue} za klik - koszt: ${formatNumber(actualCost)} ciastek`;
   }
+  
   const btn = document.createElement('button');
   btn.textContent = 'Kup';
-  btn.disabled = count < upgrade.cost;
+  btn.disabled = count < actualCost;
   btn.addEventListener('click', () => {
-    if (count >= upgrade.cost) {
-      count -= upgrade.cost;
+    if (count >= actualCost) {
+      count -= actualCost;
       if(type === 'production') {
         upgrade.count++;
         cps += upgrade.cps;
@@ -192,22 +244,181 @@ function renderUpgrades() {
   cursorUpgrades.forEach(upg => createUpgradeItem(upg, cursorUpgradesDiv, 'click'));
 }
 
+// --- Funkcje prestiżowe ---
+function calculateHeavenlyChips() {
+  return Math.floor(Math.sqrt(cookiesBakedThisAscension / 1000000));
+}
+
+function updateHeavenlyChipsDisplay() {
+  document.getElementById('heavenlyChipsCount').textContent = formatNumber(heavenlyChips);
+  document.getElementById('heavenlyChipsThisAscension').textContent = formatNumber(heavenlyChipsThisAscension);
+  document.getElementById('ascensionCount').textContent = ascensionCount;
+  document.getElementById('ascensionThreshold').textContent = formatNumber(ASCENSION_THRESHOLD);
+}
+
+function renderHeavenlyUpgrades() {
+  const container = document.getElementById('heavenlyUpgradesContainer');
+  container.innerHTML = '<h3>Niebiańskie Ulepszenia</h3>';
+  
+  heavenlyUpgrades.forEach(upg => {
+    const div = document.createElement('div');
+    div.className = 'heavenly-upgrade' + (upg.purchased ? ' purchased' : '');
+    
+    const title = document.createElement('div');
+    title.className = 'heavenly-title';
+    title.textContent = upg.name;
+    
+    const desc = document.createElement('div');
+    desc.className = 'heavenly-desc';
+    desc.textContent = upg.description;
+    
+    const cost = document.createElement('div');
+    cost.className = 'heavenly-cost';
+    cost.textContent = `Koszt: ${formatNumber(upg.cost)} NC`;
+    
+    const btn = document.createElement('button');
+    
+    if (upg.purchased) {
+      btn.textContent = 'Kupione ✓';
+      btn.disabled = true;
+    } else {
+      if (heavenlyChips < upg.cost) {
+        btn.textContent = 'Brak NC';
+        btn.disabled = true;
+      } else {
+        btn.textContent = 'Kup';
+        btn.disabled = false;
+      }
+    }
+    
+    btn.addEventListener('click', () => buyHeavenlyUpgrade(upg));
+    
+    div.appendChild(title);
+    div.appendChild(desc);
+    div.appendChild(cost);
+    div.appendChild(btn);
+    
+    container.appendChild(div);
+  });
+}
+
+function buyHeavenlyUpgrade(upg) {
+  if (heavenlyChips >= upg.cost && !upg.purchased) {
+    heavenlyChips -= upg.cost;
+    upg.purchased = true;
+    updateHeavenlyChipsDisplay();
+    renderHeavenlyUpgrades();
+    saveGame();
+  }
+}
+
+function getHeavenlyMultiplier() {
+  let multiplier = 1;
+  heavenlyUpgrades.forEach(upg => {
+    if (upg.purchased && upg.effect.cpsMultiplier) {
+      multiplier += upg.effect.cpsMultiplier;
+    }
+  });
+  return multiplier;
+}
+
+function getHeavenlyClickValue() {
+  let value = 0;
+  heavenlyUpgrades.forEach(upg => {
+    if (upg.purchased && upg.effect.clickValue) {
+      value += upg.effect.clickValue;
+    }
+  });
+  return value;
+}
+
+function getHeavenlyCostReduction() {
+  let reduction = 0;
+  heavenlyUpgrades.forEach(upg => {
+    if (upg.purchased && upg.effect.costReduction) {
+      reduction += upg.effect.costReduction;
+    }
+  });
+  return reduction;
+}
+
+function getEventChanceMultiplier() {
+  let multiplier = 1;
+  heavenlyUpgrades.forEach(upg => {
+    if (upg.purchased && upg.effect.eventChance) {
+      multiplier += upg.effect.eventChance;
+    }
+  });
+  return multiplier;
+}
+
+function ascend() {
+  const hcGained = calculateHeavenlyChips();
+  if (!confirm(`Czy na pewno chcesz dokonać Wniebowstąpienia? Otrzymasz ${hcGained} Niebiańskich Chipów, ale zresetujesz swój obecny postęp (ciastka, ulepszenia).`)) {
+    return;
+  }
+
+  heavenlyChips += hcGained;
+  heavenlyChipsThisAscension = hcGained;
+  ascensionCount++;
+  
+  // Reset gry z zachowaniem prestiżu
+  resetForAscension();
+  
+  saveGame();
+  renderHeavenlyUpgrades();
+  updateHeavenlyChipsDisplay();
+  showEvent(`Dokonałeś Wniebowstąpienia i zdobyłeś ${hcGained} Niebiańskich Chipów!`, 'ascension');
+  checkAchievements();
+}
+
+function resetForAscension() {
+  // Resetujemy stan gry, ale nie prestiż
+  count = 0;
+  cps = 0;
+  clickValue = 1;
+  accumulatedCookies = 0;
+  cookiesBakedThisAscension = 0;
+  eventMultiplier = 1;
+  eventActive = false;
+
+  // Reset ulepszeń produkcji
+  upgrades.forEach(upg => {
+    upg.count = 0;
+    upg.cost = upg.initialCost;
+  });
+
+  // Reset ulepszeń kliknięć
+  cursorUpgrades.forEach(upg => {
+    upg.count = 0;
+    upg.cost = upg.initialCost;
+  });
+
+  // Aktualizacja wyświetlacza
+  updateDisplay();
+  renderUpgrades();
+}
+
 // --- Obsługa kliknięcia ciasteczka ---
 cookieBtn.addEventListener('click', e => {
-  const actualClickValue = clickValue * eventMultiplier;
+  const heavenlyClickValue = getHeavenlyClickValue();
+  const actualClickValue = (clickValue + heavenlyClickValue) * eventMultiplier;
+  
   count += actualClickValue;
   cookiesBakedThisAscension += actualClickValue;
   totalFromClicks += actualClickValue;
-  createFlyingCookie(e.clientX, e.clientY, clickValue);
-  clickSound.currentTime = 0; // Resetuj dźwięk na początek
-  clickSound.play(); // Odtwórz dźwięk kliknięcia
+  
+  createFlyingCookie(e.clientX, e.clientY, clickValue + heavenlyClickValue);
+  clickSound.currentTime = 0;
+  clickSound.play();
   updateDisplay();
   checkAchievements();
 });
 
 // --- Dodawanie ciastek na sekundę ---
 function addCookiesPerSecond() {
-  const amount = (cps * eventMultiplier) / 10;
+  const heavenlyMultiplier = getHeavenlyMultiplier();
+  const amount = (cps * eventMultiplier * heavenlyMultiplier) / 10;
   count += amount;
   cookiesBakedThisAscension += amount;
 
@@ -225,8 +436,7 @@ function addCookiesPerSecond() {
 function createAutoCookieAnimation(numCookies) {
   const buttonRect = cookieBtn.getBoundingClientRect();
   const offsetParent = cookieBtn.offsetParent;
-  const parentRect = offsetParent.getBoundingClientRect();
-
+  
   const centerX = cookieBtn.offsetLeft + cookieBtn.offsetWidth / 2;
   const centerY = cookieBtn.offsetTop + cookieBtn.offsetHeight / 2;
 
@@ -243,10 +453,10 @@ function createAutoCookieAnimation(numCookies) {
     cookie.style.top = `${centerY}px`;
     cookie.textContent = '🍪';
     
-    // Zmiana koloru podczas eventu
+    // Tylko niebieska obwódka podczas eventu
     if (eventMultiplier > 1) {
-      cookie.style.color = '#3a86ff';
-      cookie.style.textShadow = '1px 1px 1px #000';
+      cookie.style.border = '1px solid #3a86ff';
+      cookie.style.borderRadius = '50%';
     }
 
     offsetParent.appendChild(cookie);
@@ -263,14 +473,45 @@ function createAutoCookieAnimation(numCookies) {
 // --- Aktualizacja wyświetlanych wartości ---
 function updateDisplay() {
   countEl.textContent = formatNumber(count);
-  cpsEl.textContent = (cps * eventMultiplier).toFixed(1);
-  clickValueEl.textContent = formatNumber(clickValue * eventMultiplier);
+  
+  const heavenlyMultiplier = getHeavenlyMultiplier();
+  const cpsValue = cps * eventMultiplier * heavenlyMultiplier;
+  cpsEl.textContent = Number.isInteger(cpsValue) ? cpsValue : cpsValue.toFixed(1);
+  
+  const heavenlyClickValue = getHeavenlyClickValue();
+  const clickValueTotal = (clickValue + heavenlyClickValue) * eventMultiplier;
+  clickValueEl.textContent = formatNumber(clickValueTotal);
+  
   multiplierEl.textContent = eventMultiplier.toFixed(2) + "x";
   sessionCountEl.textContent = formatNumber(cookiesBakedThisAscension);
   updateButtons();
   playTimeEl.textContent = formatPlayTime(playTimeSeconds);
+  
+  const ascendBtn = document.getElementById('ascendBtn');
+  const canAscend = cookiesBakedThisAscension >= ASCENSION_THRESHOLD;
+  
+  if (canAscend) {
+    ascendBtn.disabled = false;
+    ascendBtn.innerHTML = 'Dokonaj Wniebowstąpienia!';
+    ascendBtn.classList.remove('disabled');
+  } else {
+    ascendBtn.disabled = true;
+    ascendBtn.innerHTML = 'Potrzebujesz 1 mln ciastek';
+    ascendBtn.classList.add('disabled');
+  }
+  
   if (eventMultiplier > 1) {
-   cpsEl.style.color = '#3a86ff';
+    cpsEl.style.color = '#3a86ff';
+    clickValueEl.style.color = '#3a86ff';
+    multiplierEl.style.color = '#3a86ff';
+  } else {
+    cpsEl.style.color = '#5d3a00';
+    clickValueEl.style.color = '#5d3a00';
+    multiplierEl.style.color = '#5d3a00';
+  }
+
+  if (eventMultiplier > 1) {
+    cpsEl.style.color = '#3a86ff';
     clickValueEl.style.color = '#3a86ff';
     multiplierEl.style.color = '#3a86ff';
   } else {
@@ -288,19 +529,24 @@ function formatPlayTime(seconds) {
 }
 
 function updateButtons() {
+  const costReduction = getHeavenlyCostReduction();
+  
   upgrades.forEach(upg => {
     const buttons = upgradesDiv.querySelectorAll('button');
     buttons.forEach(btn => {
       if(btn.previousSibling.textContent.includes(upg.name)) {
-        btn.disabled = count < upg.cost;
+        const actualCost = Math.ceil(upg.cost * (1 - costReduction));
+        btn.disabled = count < actualCost;
       }
     });
   });
+  
   cursorUpgrades.forEach(upg => {
     const buttons = cursorUpgradesDiv.querySelectorAll('button');
     buttons.forEach(btn => {
       if(btn.previousSibling.textContent.includes(upg.name)) {
-        btn.disabled = count < upg.cost;
+        const actualCost = Math.ceil(upg.cost * (1 - costReduction));
+        btn.disabled = count < actualCost;
       }
     });
   });
@@ -310,8 +556,11 @@ function updateButtons() {
 function createFlyingCookie(x, y, baseValue) {
   const span = document.createElement('span');
   span.className = 'flying-cookie';
-  span.style.left = (x - 20) + 'px';
-  span.style.top = (y - 20) + 'px';
+  const scrollX = window.scrollX || window.pageXOffset;
+  const scrollY = window.scrollY || window.pageYOffset;
+  
+  span.style.left = `${x + scrollX - 20}px`;
+  span.style.top = `${y + scrollY - 20}px`;
   
   // Uwzględnij mnożnik eventu
   const displayValue = baseValue * eventMultiplier;
@@ -321,7 +570,6 @@ function createFlyingCookie(x, y, baseValue) {
   if (eventMultiplier > 1) {
     span.style.color = '#3a86ff';
     span.style.textShadow = '1px 1px 1px #000';
-    span.style.fontWeight = '900';
   }
   
   document.body.appendChild(span);
@@ -335,8 +583,13 @@ const eventBox = document.getElementById('eventBox');
 
 function startRandomEvent() {
   if(eventActive) return;
+  
+  const baseChance = 0.01;
+  const eventChanceMultiplier = getEventChanceMultiplier();
+  const actualChance = baseChance * eventChanceMultiplier;
+  
   const rand = Math.random();
-  if(rand < 0.01) {
+  if (rand < actualChance) {
     eventActive = true;
     eventMultiplier = 2;
     eventSound.currentTime = 0;
@@ -355,11 +608,13 @@ function showEvent(message, type) {
   eventBox.classList.add('show');
   
   // Resetujemy wszystkie klasy kolorów
-  eventBox.classList.remove('event-type', 'achievement-type');
+  eventBox.classList.remove('event-type', 'achievement-type', 'ascension-type');
   
   // Dodajemy odpowiednią klasę w zależności od typu
   if (type === 'achievement') {
     eventBox.classList.add('achievement-type');
+  } else if (type === 'ascension') {
+    eventBox.classList.add('ascension-type');
   } else {
     eventBox.classList.add('event-type');
   }
@@ -473,7 +728,14 @@ function saveGame() {
     cookiesBakedThisAscension: cookiesBakedThisAscension,
     totalFromClicks: totalFromClicks,
     bakeryName: bakeryOwnerEl.textContent,
-    lastSaveTime: new Date().getTime()
+    lastSaveTime: new Date().getTime(),
+    heavenlyChips: heavenlyChips,
+    heavenlyChipsThisAscension: heavenlyChipsThisAscension,
+    ascensionCount: ascensionCount,
+    heavenlyUpgrades: heavenlyUpgrades.map(upg => ({ 
+      id: upg.id, 
+      purchased: upg.purchased 
+    }))
   };
   
   localStorage.setItem('cookieClickerSave', JSON.stringify(gameState));
@@ -495,6 +757,9 @@ function loadGame() {
     cookiesBakedThisAscension = gameState.cookiesBakedThisAscension || 0;
     totalFromClicks = gameState.totalFromClicks || 0;
     lastSaveTime = gameState.lastSaveTime || null;
+    heavenlyChips = gameState.heavenlyChips || 0;
+    heavenlyChipsThisAscension = gameState.heavenlyChipsThisAscension || 0;
+    ascensionCount = gameState.ascensionCount || 0;
 
     gameState.upgrades.forEach(savedUpg => {
       const upg = upgrades.find(u => u.id === savedUpg.id);
@@ -519,10 +784,21 @@ function loadGame() {
       }
     });
 
+    if (gameState.heavenlyUpgrades) {
+      gameState.heavenlyUpgrades.forEach(savedUpg => {
+        const upg = heavenlyUpgrades.find(u => u.id === savedUpg.id);
+        if (upg) {
+          upg.purchased = savedUpg.purchased;
+        }
+      });
+    }
+
     setBakeryName(gameState.bakeryName || generateRandomName());
     updateDisplay();
     renderUpgrades();
     renderAchievements();
+    renderHeavenlyUpgrades();
+    updateHeavenlyChipsDisplay();
     updateLastSaveTimeDisplay();
     
     return true;
@@ -569,11 +845,15 @@ document.getElementById('importFile').addEventListener('change', function(e) {
   reader.onload = (event) => {
     try {
       const gameState = JSON.parse(event.target.result);
+      if (typeof gameState.count !== 'number' || 
+          !Array.isArray(gameState.upgrades)) {
+        throw new Error('nieprawidłowy format pliku');
+      }
       localStorage.setItem('cookieClickerSave', JSON.stringify(gameState));
       loadGame();
       alert('Postęp został pomyślnie zaimportowany!');
     } catch (error) {
-      alert('Błąd podczas wczytywania pliku: nieprawidłowy format pliku.');
+      alert(`Błąd wczytywania pliku: ${error.message}.`);
     }
   };
   reader.readAsText(file);
@@ -581,6 +861,15 @@ document.getElementById('importFile').addEventListener('change', function(e) {
 
 // Autozapis co 5 minut
 setInterval(saveGame, 5 * 60 * 1000);
+
+// Throttling do zapisu przy zamknięciu
+let isSaving = false;
+window.addEventListener('beforeunload', () => {
+  if (!isSaving) {
+    isSaving = true;
+    saveGame();
+  }
+});
 
 // Zapisz przy zamknięciu strony
 window.addEventListener('beforeunload', saveGame);
@@ -602,30 +891,31 @@ function resetGame() {
   playTimeSeconds = 0;
   cookiesBakedThisAscension = 0;
   totalFromClicks = 0;
+  heavenlyChips = 0;
+  heavenlyChipsThisAscension = 0;
+  ascensionCount = 0;
+
+  [clickSound, buySound, achievementSound, eventSound].forEach(sound => {
+    sound.currentTime = 0;
+    sound.muted = false;
+  });
   
   upgrades.forEach(upgrade => {
     upgrade.count = 0;
-    upgrade.cost = upgrade.id === 'cursor' ? 15 : 
-                  upgrade.id === 'grandma' ? 100 : 
-                  upgrade.id === 'farm' ? 1100 : 
-                  upgrade.id === 'factory' ? 12000 : 
-                  upgrade.id === 'bank' ? 130000 : 
-                  upgrade.id === 'temple' ? 1400000 : 
-                  upgrade.id === 'wizardTower' ? 20000000 : 
-                  upgrade.id === 'shipment' ? 330000000 : 
-                  upgrade.id === 'alchemyLab' ? 5100000000 : 
-                  75000000000;
+    upgrade.cost = upgrade.initialCost;
   });
   
   cursorUpgrades.forEach(upgrade => {
     upgrade.count = 0;
-    upgrade.cost = upgrade.id === 'fingerStrength' ? 100 : 
-                  upgrade.id === 'doubleFinger' ? 1000 : 
-                  15000;
+    upgrade.cost = upgrade.initialCost;
   });
   
   achievements.forEach(achievement => {
     achievement.unlocked = false;
+  });
+  
+  heavenlyUpgrades.forEach(upgrade => {
+    upgrade.purchased = false;
   });
   
   setBakeryName(generateRandomName());
@@ -635,6 +925,8 @@ function resetGame() {
   updateDisplay();
   renderUpgrades();
   renderAchievements();
+  renderHeavenlyUpgrades();
+  updateHeavenlyChipsDisplay();
   updateLastSaveTimeDisplay();
   
   alert('Gra została zresetowana! Możesz zacząć od nowa.');
@@ -653,7 +945,11 @@ setInterval(() => {
 
 // --- Inicjalizacja ---
 renderUpgrades();
+renderHeavenlyUpgrades();
 updateDisplay();
 renderAchievements();
 setBakeryName(generateRandomName());
 loadGame();
+
+// Dodaj obsługę przycisku ascension
+document.getElementById('ascendBtn').addEventListener('click', ascend);
