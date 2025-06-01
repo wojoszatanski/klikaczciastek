@@ -7,6 +7,7 @@ let eventActive = false;
 let accumulatedCookies = 0;
 let playTimeSeconds = 0;
 let lastSaveTime = null;
+let cookieCounter = 0;
 
 // --- Nowy licznik ciastek upieczonych w sesji ---
 let cookiesBakedThisAscension = 0;
@@ -50,10 +51,8 @@ const volumeSection = document.getElementById('volumeSection');
 const enableMusicButton = document.getElementById('enableMusicButton');
 const volumeControl = document.getElementById('volumeControl');
 volumeControl.value = 1; // Ustaw domyślną głośność na 100%
-backgroundMusic.play().catch(() => {
-  volumeSection.style.display = 'none';
-  enableMusicButton.style.display = 'inline-block';
-});
+enableMusicButton.style.display = 'inline-block';
+volumeSection.style.display = 'none';
 const muteButton = document.getElementById('muteButton');
 const clickSound = document.getElementById('clickSound');
 const buySound = document.getElementById('buySound');
@@ -170,6 +169,9 @@ function formatNumber(num) {
   if (num < 1000) return Math.floor(num).toString();
   
   const suffixes = [
+    { value: 1e33, suffix: ' decylion' },
+    { value: 1e30, suffix: ' nonylion' },
+    { value: 1e27, suffix: ' oktylion' },
     { value: 1e24, suffix: ' septylion' },
     { value: 1e21, suffix: ' sekstylion' },
     { value: 1e18, suffix: ' kwintylion' },
@@ -253,7 +255,6 @@ function updateHeavenlyChipsDisplay() {
   document.getElementById('heavenlyChipsCount').textContent = formatNumber(heavenlyChips);
   document.getElementById('heavenlyChipsThisAscension').textContent = formatNumber(heavenlyChipsThisAscension);
   document.getElementById('ascensionCount').textContent = ascensionCount;
-  document.getElementById('ascensionThreshold').textContent = formatNumber(ASCENSION_THRESHOLD);
 }
 
 function renderHeavenlyUpgrades() {
@@ -453,11 +454,13 @@ function createAutoCookieAnimation(numCookies) {
     cookie.style.top = `${centerY}px`;
     cookie.textContent = '🍪';
     
-    // Tylko niebieska obwódka podczas eventu
-    if (eventMultiplier > 1) {
-      cookie.style.border = '1px solid #3a86ff';
-      cookie.style.borderRadius = '50%';
+    // Tylko co drugie ciastko będzie niebieskie podczas eventu
+    if (eventMultiplier > 1 && cookieCounter % 2 === 0) {
+      cookie.style.filter = "invert(44%) sepia(37%) saturate(1117%) hue-rotate(181deg) brightness(104%) contrast(109%)";
+      cookie.style.opacity = "0.5";
     }
+
+    cookieCounter++; // Zwiększ licznik po każdym ciastku
 
     offsetParent.appendChild(cookie);
 
@@ -482,7 +485,7 @@ function updateDisplay() {
   const clickValueTotal = (clickValue + heavenlyClickValue) * eventMultiplier;
   clickValueEl.textContent = formatNumber(clickValueTotal);
   
-  multiplierEl.textContent = eventMultiplier.toFixed(2) + "x";
+  multiplierEl.textContent = Number.isInteger(eventMultiplier) ? eventMultiplier + "x" : eventMultiplier.toFixed(2) + "x";
   sessionCountEl.textContent = formatNumber(cookiesBakedThisAscension);
   updateButtons();
   playTimeEl.textContent = formatPlayTime(playTimeSeconds);
@@ -491,25 +494,18 @@ function updateDisplay() {
   const canAscend = cookiesBakedThisAscension >= ASCENSION_THRESHOLD;
   
   if (canAscend) {
+    const hcGained = calculateHeavenlyChips();
+    ascendBtn.title = `Otrzymasz ${formatNumber(hcGained)} Niebiańskich Ciastek`;
     ascendBtn.disabled = false;
     ascendBtn.innerHTML = 'Dokonaj Wniebowstąpienia!';
     ascendBtn.classList.remove('disabled');
   } else {
+    ascendBtn.title = '';
     ascendBtn.disabled = true;
     ascendBtn.innerHTML = 'Potrzebujesz 1 mln ciastek';
     ascendBtn.classList.add('disabled');
   }
   
-  if (eventMultiplier > 1) {
-    cpsEl.style.color = '#3a86ff';
-    clickValueEl.style.color = '#3a86ff';
-    multiplierEl.style.color = '#3a86ff';
-  } else {
-    cpsEl.style.color = '#5d3a00';
-    clickValueEl.style.color = '#5d3a00';
-    multiplierEl.style.color = '#5d3a00';
-  }
-
   if (eventMultiplier > 1) {
     cpsEl.style.color = '#3a86ff';
     clickValueEl.style.color = '#3a86ff';
@@ -584,7 +580,7 @@ const eventBox = document.getElementById('eventBox');
 function startRandomEvent() {
   if(eventActive) return;
   
-  const baseChance = 0.01;
+  const baseChance = 0.005;
   const eventChanceMultiplier = getEventChanceMultiplier();
   const actualChance = baseChance * eventChanceMultiplier;
   
@@ -894,6 +890,8 @@ function resetGame() {
   heavenlyChips = 0;
   heavenlyChipsThisAscension = 0;
   ascensionCount = 0;
+  cookieCounter = 0;
+
 
   [clickSound, buySound, achievementSound, eventSound].forEach(sound => {
     sound.currentTime = 0;

@@ -15,12 +15,12 @@
 </head>
 <body>
   <button id="settingsToggle" title="Ustawienia" style="position: fixed; top: 15px; right: 15px; z-index: 3000; border: none; font-size: 28px; color: white; cursor: pointer; text-shadow: 0 0 3px black;">⚙️</button>
-  <audio id="backgroundMusic" src="piosenka.flac" autoplay loop></audio>
+  <audio id="backgroundMusic" src="piosenka.flac" loop></audio>
   <audio id="clickSound" src="click.mp3"></audio>
   <audio id="buySound" src="buy.mp3"></audio>
   <audio id="achievementSound" src="achievement.mp3"></audio>
   <audio id="eventSound" src="event.mp3"></audio>
-  <h1>Klikacz Ciastek - V13</h1>
+  <h1>Klikacz Ciastek</h1>
   <h2 id="bakeryName" style="cursor: pointer; color: #fff8dc; text-shadow: 1px 1px 3px #000;">Piekarnia <span id="bakeryOwner"></span></h2>
   <button id="cookieBtn" title="Kliknij, aby zdobyć ciastko!">🍪</button>
   <div id="stats">
@@ -49,7 +49,6 @@
       <p>Niebiańskie Ciastka (NC): <span id="heavenlyChipsCount">0</span></p>
       <p>Niebiańskie Ciastka w tej sesji: <span id="heavenlyChipsThisAscension">0</span></p>
       <p>Liczba Wniebowstąpień: <span id="ascensionCount">0</span></p>
-      <p>Potrzebujesz <span id="ascensionThreshold"></span> ciastek w sesji do Wniebowstąpienia</p>
     </div>
     <button id="ascendBtn" class="ascend-button">Dokonaj Wniebowstąpienia!</button>
     <div id="heavenlyUpgradesContainer"></div>
@@ -78,7 +77,7 @@
       <button id="resetProgress">Zresetuj grę</button>
       <p style="margin-top: 30px;">Ostatni auto-zapis: <span id="lastSaveTime">Nigdy</span></p>
     </div>
-    <p style="text-align: right; font-size: 12px; color: #bbbbbb; margin-top: 25px;">Wersja: V13 | Autor: Wojciech Pielok</p>
+    <p style="text-align: right; font-size: 12px; color: #bbbbbb; margin-top: 25px;">Wersja: V14 | Autor: Wojciech Pielok</p>
   </div>
   <script src="script.js"></script>
 </body>

@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Comfortaa&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
 body {
-    font-family: 'Comfortaa', cursive, Arial, sans-serif;
+    font-family: "Merriweather", serif;
     background: url('https://wallpapercave.com/wp/wp7667538.jpg') no-repeat center center fixed;
     background-size: cover;
     text-align: center;
@@ -8,6 +8,28 @@ body {
     position: relative;
     min-height: 100vh;
     user-select: none;
+}
+#stats,
+.menu,
+.menu h2,
+.upgrade-item,
+.upgrade-item button,
+#achievements,
+#achievements .achievement,
+#settingsMenu,
+#settingsMenu button,
+#settingsMenu label,
+#settingsMenu p,
+#volumeSection,
+#saveSection,
+#ascensionMenu,
+#ascensionStats,
+.heavenly-upgrade,
+.heavenly-title,
+.heavenly-desc,
+.heavenly-cost,
+.ascend-button {
+    font-family: Tahoma, Verdana, sans-serif !important;
 }
 h1 {
     font-weight: 900;
@@ -152,6 +174,7 @@ h1 {
     font-size: 16px;
     pointer-events: none;
     transition: transform 1s ease-out, opacity 1s ease-out;
+    transform-origin: center;
 }
 #eventBox {
     position: fixed;
@@ -425,11 +448,13 @@ input[type=range]::-ms-thumb {
     text-shadow: 0 0 8px rgba(147, 112, 219, 0.7);
     border-image: linear-gradient(to right, transparent, #9370db, transparent) 1;
     animation: ascensionGlow 2.5s infinite alternate ease-in-out;
+    font-family: "Merriweather", serif !important; /* Specjalna czcionka dla podnagłówka prestiżu */
 }
 #ascensionMenu h3 {
     color: #e0b0ff !important;
     text-shadow: 0 0 8px rgba(147, 112, 219, 0.7);
     border-image: linear-gradient(to right, transparent, #9370db, transparent) 1;
+    font-family: "Merriweather", serif !important; /* Specjalna czcionka dla podnagłówka prestiżu */
 }
 #ascensionMenu::-webkit-scrollbar {
   width: 8px;
