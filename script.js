@@ -8,6 +8,7 @@ let accumulatedCookies = 0;
 let playTimeSeconds = 0;
 let lastSaveTime = null;
 let cookieCounter = 0;
+let musicEnabledFlag = false;
 
 // --- Nowy licznik ciastek upieczonych w sesji ---
 let cookiesBakedThisAscension = 0;
@@ -60,26 +61,37 @@ const achievementSound = document.getElementById('achievementSound');
 const eventSound = document.getElementById('eventSound');
 const effectsMuteButton = document.getElementById('effectsMuteButton');
 const effectsVolumeControl = document.getElementById('effectsVolumeControl');
+const buyHeavenlySound = document.getElementById('buyHeavenlySound');
+const ascendSound = document.getElementById('ascendSound');
 
 // --- Ustawienia początkowe głośności ---
-[clickSound, buySound, achievementSound, eventSound].forEach(sound => {
+[clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound].forEach(sound => {
   sound.volume = effectsVolumeControl.value;
 });
 
-// --- Obsługa zmian głośności efektów ---
+// --- Obsługa zmian głośności muzyki ---
+volumeControl.addEventListener('input', () => {
+  backgroundMusic.volume = volumeControl.value;
+  saveSoundSettings();
+});
+
+// Obsługa zmian głośności efektów
 effectsVolumeControl.addEventListener('input', () => {
-  [clickSound, buySound, achievementSound, eventSound].forEach(sound => {
-    sound.volume = effectsVolumeControl.value;
+  const volume = effectsVolumeControl.value;
+  [clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound].forEach(sound => {
+    sound.volume = volume;
   });
+  saveSoundSettings();
 });
 
 // --- Obsługa wyciszenia efektów ---
 effectsMuteButton.addEventListener('click', () => {
   const isMuted = clickSound.muted;
-  [clickSound, buySound, achievementSound, eventSound].forEach(sound => {
+  [clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound].forEach(sound => {
     sound.muted = !isMuted;
   });
   effectsMuteButton.textContent = isMuted ? 'Wycisz efekty' : 'Odcisz efekty';
+  saveSoundSettings();
 });
 
 // --- Inicjalizacja stanu przycisku ---
@@ -87,6 +99,103 @@ effectsMuteButton.addEventListener('click', () => {
   sound.muted = false;
 });
 effectsMuteButton.textContent = 'Wycisz efekty';
+
+// --- Zmienne do przechowywania ustawień dźwięku ---
+let soundSettings = {
+  musicVolume: 1,
+  musicMuted: false,
+  effectsVolume: 1,
+  effectsMuted: false
+};
+
+// --- Funkcje do obsługi ustawień dźwięku ---
+function saveSoundSettings() {
+  soundSettings = {
+    musicVolume: volumeControl.value,
+    musicMuted: backgroundMusic.muted,
+    effectsVolume: effectsVolumeControl.value,
+    effectsMuted: clickSound.muted,
+    musicEnabled: musicEnabledFlag 
+  };
+  localStorage.setItem('cookieClickerSoundSettings', JSON.stringify(soundSettings));
+}
+
+// Funkcja sprawdzająca możliwość autoodtwarzania
+async function checkAutoplay() {
+  try {
+    await backgroundMusic.play();
+    return true;
+  } catch (e) {
+    // Loguj błąd tylko jeśli nie był już logowany
+    if (!window.autoplayErrorLogged) {
+      console.log("Autoodtwarzanie zostało zablokowane przez przeglądarkę.");
+      window.autoplayErrorLogged = true;
+    }
+    return false;
+  }
+}
+
+async function loadSoundSettings() {
+  const savedSettings = localStorage.getItem('cookieClickerSoundSettings');
+  if (savedSettings) {
+    soundSettings = JSON.parse(savedSettings);
+    
+    musicEnabledFlag = soundSettings.musicEnabled || false;
+
+    // Dodajemy flagę sprawdzającą czy błąd był już logowany
+    if (!window.autoplayErrorLogged) {
+      // Sprawdź czy autoodtwarzanie jest możliwe
+      const autoplayAllowed = await checkAutoplay();
+      
+      if (musicEnabledFlag && autoplayAllowed) {
+        volumeSection.style.display = 'block';
+        enableMusicButton.style.display = 'none';
+        backgroundMusic.play().catch(e => {
+          // Logujemy błąd tylko raz
+          if (!window.autoplayErrorLogged) {
+            console.log("Play error:", e);
+            window.autoplayErrorLogged = true;
+          }
+        });
+      } else {
+        // Jeśli autoodtwarzanie zablokowane, resetuj ustawienia
+        volumeSection.style.display = 'none';
+        enableMusicButton.style.display = 'inline-block';
+        musicEnabledFlag = false;
+        
+        // Zaktualizuj zapisane ustawienia
+        soundSettings.musicEnabled = false;
+        localStorage.setItem('cookieClickerSoundSettings', JSON.stringify(soundSettings));
+        
+        // Logujemy błąd tylko raz
+        if (!window.autoplayErrorLogged) {
+          console.log("Autoodtwarzanie zablokowane");
+          window.autoplayErrorLogged = true;
+        }
+      }
+    }
+
+    // Ustawienia muzyki
+    volumeControl.value = soundSettings.musicVolume;
+    backgroundMusic.volume = soundSettings.musicVolume;
+    backgroundMusic.muted = soundSettings.musicMuted;
+    muteButton.textContent = soundSettings.musicMuted ? 'Odcisz muzykę' : 'Wycisz muzykę';
+    
+    // Ustawienia efektów
+    effectsVolumeControl.value = soundSettings.effectsVolume;
+    [clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound].forEach(sound => {
+      sound.volume = soundSettings.effectsVolume;
+      sound.muted = soundSettings.effectsMuted;
+    });
+    effectsMuteButton.textContent = soundSettings.effectsMuted ? 'Odcisz efekty' : 'Wycisz efekty';
+  }
+  
+  // Dodatkowe sprawdzenie dla ustawień muzyki
+  if (soundSettings && soundSettings.musicEnabled) {
+    volumeSection.style.display = 'block';
+    enableMusicButton.style.display = 'none';
+  }
+}
 
 // --- Ulepszenia produkcji ---
 const upgrades = [
@@ -284,7 +393,7 @@ function renderHeavenlyUpgrades() {
       btn.disabled = true;
     } else {
       if (heavenlyChips < upg.cost) {
-        btn.textContent = 'Brak NC';
+        btn.textContent = 'Kup';
         btn.disabled = true;
       } else {
         btn.textContent = 'Kup';
@@ -310,6 +419,10 @@ function buyHeavenlyUpgrade(upg) {
     updateHeavenlyChipsDisplay();
     renderHeavenlyUpgrades();
     saveGame();
+
+    // Dodaj odtworzenie dźwięku zakupu niebiańskiego ulepszenia
+    buyHeavenlySound.currentTime = 0;
+    buyHeavenlySound.play();
   }
 }
 
@@ -359,18 +472,38 @@ function ascend() {
     return;
   }
 
+  // Tworzymy flashujący overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'ascensionOverlay';
+  document.body.appendChild(overlay);
+
+  // Przewijanie do góry strony
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
   heavenlyChips += hcGained;
   heavenlyChipsThisAscension = hcGained;
   ascensionCount++;
-  
+
   // Reset gry z zachowaniem prestiżu
   resetForAscension();
+
+  // Odtwarzamy dźwięk wniebowstąpienia
+  ascendSound.currentTime = 0;
+  ascendSound.play();
   
   saveGame();
   renderHeavenlyUpgrades();
   updateHeavenlyChipsDisplay();
-  showEvent(`Dokonałeś Wniebowstąpienia i zdobyłeś ${hcGained} Niebiańskich Chipów!`, 'ascension');
+  showEvent(`Dokonałeś Wniebowstąpienia i zdobyłeś ${hcGained} Niebiańskich Ciastek!`, 'ascension');
   checkAchievements();
+
+  // Usuwamy overlay po 5 sekundach
+  setTimeout(() => {
+    overlay.remove();
+  }, 5000);
 }
 
 function resetForAscension() {
@@ -495,9 +628,9 @@ function updateDisplay() {
   
   if (canAscend) {
     const hcGained = calculateHeavenlyChips();
-    ascendBtn.title = `Otrzymasz ${formatNumber(hcGained)} Niebiańskich Ciastek`;
+    ascendBtn.title = `Kliknij, aby otrzymać ${formatNumber(hcGained)} Niebiańskich Ciastek!`;
     ascendBtn.disabled = false;
-    ascendBtn.innerHTML = 'Dokonaj Wniebowstąpienia!';
+    ascendBtn.innerHTML = 'Dokonaj Wniebowstąpienia';
     ascendBtn.classList.remove('disabled');
   } else {
     ascendBtn.title = '';
@@ -684,13 +817,9 @@ volumeControl.addEventListener('input', () => {
 
 // Obsługa wyciszenia
 muteButton.addEventListener('click', () => {
-  if (backgroundMusic.muted) {
-    backgroundMusic.muted = false;
-    muteButton.textContent = 'Wycisz muzykę';
-  } else {
-    backgroundMusic.muted = true;
-    muteButton.textContent = 'Odcisz muzykę';
-  }
+  backgroundMusic.muted = !backgroundMusic.muted;
+  muteButton.textContent = backgroundMusic.muted ? 'Odcisz muzykę' : 'Wycisz muzykę';
+  saveSoundSettings();
 });
 
 // Obsługa menu ustawień
@@ -705,11 +834,24 @@ document.getElementById('closeSettings').addEventListener('click', function() {
   document.getElementById('settingsMenu').style.display = 'none';
 });
 
-enableMusicButton.addEventListener('click', () => {
-  backgroundMusic.play().then(() => {
+enableMusicButton.addEventListener('click', async () => {
+  try {
+    const result = await backgroundMusic.play();
+    musicEnabledFlag = true;
     volumeSection.style.display = 'block';
     enableMusicButton.style.display = 'none';
-  });
+    saveSoundSettings();
+    
+    // Oznacz że udało się odtworzyć
+    window.musicPlayed = true;
+  } catch (e) {
+    // Loguj błąd tylko jeśli nie był już logowany
+    if (!window.autoplayErrorLogged) {
+      console.error("Błąd odtwarzania muzyki:", e);
+      window.autoplayErrorLogged = true;
+    }
+    alert("Błąd odtwarzania muzyki. Upewnij się, że masz włączony dźwięk w przeglądarce i spróbuj ponownie.");
+  }
 });
 
 function saveGame() {
@@ -796,6 +938,7 @@ function loadGame() {
     renderHeavenlyUpgrades();
     updateHeavenlyChipsDisplay();
     updateLastSaveTimeDisplay();
+    loadSoundSettings();
     
     return true;
   } catch (e) {
@@ -892,8 +1035,7 @@ function resetGame() {
   ascensionCount = 0;
   cookieCounter = 0;
 
-
-  [clickSound, buySound, achievementSound, eventSound].forEach(sound => {
+  [clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound].forEach(sound => {
     sound.currentTime = 0;
     sound.muted = false;
   });
@@ -926,7 +1068,7 @@ function resetGame() {
   renderHeavenlyUpgrades();
   updateHeavenlyChipsDisplay();
   updateLastSaveTimeDisplay();
-  
+
   alert('Gra została zresetowana! Możesz zacząć od nowa.');
 }
 
@@ -947,6 +1089,7 @@ renderHeavenlyUpgrades();
 updateDisplay();
 renderAchievements();
 setBakeryName(generateRandomName());
+loadSoundSettings();
 loadGame();
 
 // Dodaj obsługę przycisku ascension
