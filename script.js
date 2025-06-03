@@ -116,7 +116,7 @@ function playCurrentTrack() {
   backgroundMusic.load();
   
   if (isPlaying) {
-    backgroundMusic.play().catch(e => console.log("Autoplay blocked"));
+    backgroundMusic.play().catch(e => console.log("Autoplay zablokowany przez przeglądarkę. Naciśnij przycisk play, aby kontynuować."));
   }
   
   updateTrackDisplay();
@@ -125,6 +125,12 @@ function playCurrentTrack() {
 
 function updateTrackDisplay() {
   currentTrackEl.textContent = playlist[currentTrackIndex].title;
+  
+  // Ustawienie okładki albumu
+  const albumCover = document.getElementById('albumCover');
+  const coverIndex = currentTrackIndex + 1; // bo playlist[0] to piosenka1
+  albumCover.src = `piosenka${coverIndex}.jpg`;
+  albumCover.style.display = 'block';
 }
 
 function togglePlayPause() {

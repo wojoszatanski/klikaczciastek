@@ -545,3 +545,8 @@ input[type=range]::-ms-thumb {
   font-weight: bold;
   color: #f5dba7;
 }
+#albumCover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  border: 2px solid #e6b800;
+  object-fit: cover;
+}
