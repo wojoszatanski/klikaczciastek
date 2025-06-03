@@ -521,3 +521,27 @@ input[type=range]::-ms-thumb {
     opacity: 0;
   }
 }
+#musicControls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+#musicControls button {
+  background: linear-gradient(145deg, #e6b800, #c89200);
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+#musicControls button:hover {
+  transform: scale(1.1);
+}
+#currentTrack {
+  font-weight: bold;
+  color: #f5dba7;
+}

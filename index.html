@@ -15,7 +15,7 @@
 </head>
 <body>
   <button id="settingsToggle" title="Ustawienia" style="position: fixed; top: 15px; right: 15px; z-index: 3000; border: none; font-size: 28px; color: white; cursor: pointer; text-shadow: 0 0 3px black;">⚙️</button>
-  <audio id="backgroundMusic" src="piosenka.flac" loop></audio>
+  <audio id="backgroundMusic"></audio>
   <audio id="clickSound" src="click.mp3"></audio>
   <audio id="buySound" src="buy.mp3"></audio>
   <audio id="achievementSound" src="achievement.mp3"></audio>
@@ -68,8 +68,14 @@
       <label for="volumeControl">Głośność muzyki:</label>
       <input id="volumeControl" type="range" min="0" max="1" step="0.1" value="1" />
       <button id="muteButton" style="margin-top: 15px;">Wycisz muzykę</button>
-      <p style="margin-top: 20px;">Muzyka:</p>
-      <p>Ye - WW3</p>
+      <div style="margin-top: 20px;">
+        <p>Aktualny utwór: <span id="currentTrack">[brak]</span></p>
+        <div id="musicControls" style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
+          <button id="prevTrack" title="Poprzedni utwór">⏮</button>
+          <button id="playPause" title="Odtwórz/Pauza">⏯</button>
+          <button id="nextTrack" title="Następny utwór">⏭</button>
+        </div>
+      </div>
     </div>
     <div id="saveSection">
       <h3 style="color: #f5dba7; margin-top: 20px;">Zapisz/Wczytaj Postęp</h3>
@@ -79,7 +85,7 @@
       <button id="resetProgress">Zresetuj grę</button>
       <p style="margin-top: 30px;">Ostatni auto-zapis: <span id="lastSaveTime">Nigdy</span></p>
     </div>
-    <p style="text-align: right; font-size: 12px; color: #bbbbbb; margin-top: 25px;">Wersja: V14 | Autor: Wojciech Pielok</p>
+    <p style="text-align: right; font-size: 12px; color: #bbbbbb; margin-top: 25px;">Wersja: V16 | Autor: Wojciech Pielok</p>
   </div>
   <script src="script.js"></script>
 </body>
