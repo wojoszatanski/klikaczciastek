@@ -9,6 +9,8 @@ let playTimeSeconds = 0;
 let lastSaveTime = null;
 let cookieCounter = 0;
 let musicEnabledFlag = false;
+let firstClickOccurred = false;
+let isResuming = false;
 
 // --- Nowy licznik ciastek upieczonych w sesji ---
 let cookiesBakedThisAscension = 0;
@@ -47,12 +49,9 @@ const bakeryNameEl = document.getElementById('bakeryName');
 const bakeryOwnerEl = document.getElementById('bakeryOwner');
 const playTimeEl = document.getElementById('playTime');
 const settingsMenu = document.getElementById('settingsMenu');
-const volumeSection = document.getElementById('volumeSection');
 const enableMusicButton = document.getElementById('enableMusicButton');
 const volumeControl = document.getElementById('volumeControl');
-volumeControl.value = 1; // Ustaw domyślną głośność na 100%
-enableMusicButton.style.display = 'inline-block';
-volumeSection.style.display = 'none';
+volumeControl.value = 1;
 const muteButton = document.getElementById('muteButton');
 const clickSound = document.getElementById('clickSound');
 const buySound = document.getElementById('buySound');
@@ -62,26 +61,27 @@ const effectsMuteButton = document.getElementById('effectsMuteButton');
 const effectsVolumeControl = document.getElementById('effectsVolumeControl');
 const buyHeavenlySound = document.getElementById('buyHeavenlySound');
 const ascendSound = document.getElementById('ascendSound');
+const backgroundMusic = document.getElementById('backgroundMusic');
 
 // --- Playlista ---
 const playlist = [
-  { title: "Ye - WW3", src: "https://www.dropbox.com/scl/fi/44mea273gliafz0ow0h4a/piosenka.flac?rlkey=8gr7u7okgc9ed0ds9e7nbg8an&st=86by4y0u&dl=1"},
-  { title: "DJ Smokey - legalizenukes", src: "https://www.dropbox.com/scl/fi/r8j0aokwkd6x10w86394p/piosenka2.flac?rlkey=cstgsiayedxc41sq6rapok16p&st=q0ni4ta6&dl=1"},
-  { title: "Burzum - Dunkelheit", src: "https://www.dropbox.com/scl/fi/d8ecel8aylbp9zyw0wmfk/piosenka3.flac?rlkey=2xmgkge5os6ii3k7c1bsdw40e&st=myg4tncc&dl=1"},
-  { title: "Skrillex - SPITFIRE", src: "https://www.dropbox.com/scl/fi/wua8ekowuqe60mcspba24/piosenka4.flac?rlkey=z4h0ekjau0a8cfp7r2c0oe940&st=nw4y7dhz&dl=1"},
-  { title: "Playboi Carti - EVIL J0RDAN", src: "https://www.dropbox.com/scl/fi/5ydbuwmrdjdbrvhf2ke6t/piosenka5.flac?rlkey=948uaplt7louxzus2vx1okefo&st=mi5o8art&dl=1"},
-  { title: "The Prodigy - Omen", src: "https://www.dropbox.com/scl/fi/nciwthq9qf3b79i6qlz8k/piosenka6.flac?rlkey=l1hh7f554nsj8iw9ye8i5v103&st=urhqjpxs&dl=1"},
-  { title: "¥$ - CARNIVAL", src: "https://www.dropbox.com/scl/fi/4q8vzi85tdnolltdokkaz/piosenka7.flac?rlkey=yhymn53z09kqh7nrj6d06yxzl&st=2aa2zz83&dl=1"},
-  { title: "Lady Gaga - Poker Face", src: "https://www.dropbox.com/scl/fi/rnxhbe8mwyivf08lw11kz/piosenka8.flac?rlkey=ek0n177aycci129s9no36unv1&st=e05m33lr&dl=1"},
-  { title: "Linkin Park - Heavy Is the Crown", src: "https://www.dropbox.com/scl/fi/86pjmeoftnll98r2cz2k0/piosenka9.flac?rlkey=ekputmx54sz2dcl5dqp05gmy6&st=xdstztay&dl=1"},
-  { title: "Charli xcx - Von dutch", src: "https://www.dropbox.com/scl/fi/157duhpb5mbzakwc00c0y/piosenka10.flac?rlkey=1djhvktnp1s6o16mi8gt9tr4g&st=5znk4g49&dl=1"},
-  { title: "Pendulum - Tarantula", src: "https://www.dropbox.com/scl/fi/ii0p1yoodkptllqgx3608/piosenka11.flac?rlkey=x9oww4uy6jalvyr0hlt25tuw8&st=ni2qsbbw&dl=1" },
-  { title: "Limb Bizkit - Dad Vibes", src: "https://www.dropbox.com/scl/fi/7vywnqc9vdvgmvenwvgws/piosenka12.flac?rlkey=6k8r14t3atmoeeb88cbwpj3bc&st=xo85mrsn&dl=1"},
-  { title: "Big Pun - Twinz", src: "https://www.dropbox.com/scl/fi/ovwiqokz3udfjpye6ytlo/piosenka13.flac?rlkey=io8w4bw821uxqq1f98v3tqooo&st=c4qoaa7v&dl=1"},
-  { title: "Knocked Loose - Suffocate", src: "https://www.dropbox.com/scl/fi/td1phc3yc6qi1dip5vknh/piosenka14.flac?rlkey=log3j4oo68k962in7wq2h76wc&st=xiv5ife6&dl=1"},
-  { title: "Hechizeros Band - El Sonidito", src: "https://www.dropbox.com/scl/fi/mnbmwdgcbvt814x8tlpvl/piosenka15.flac?rlkey=hz0nafqt3oav65gbforgddyxj&st=2flmw7nl&dl=1"},
-  { title: "Sabrina Carpenter - Espresso", src: "https://www.dropbox.com/scl/fi/t1qxqx6h7itkyfmkfqhrf/piosenka16.flac?rlkey=829ny8ko7ln6cjxp0ybremkx7&st=336a0tdi&dl=1"},
-  { title: "Kizo - KIEROWNIK", src: "https://www.dropbox.com/scl/fi/u097yhh2ipu1rpzuhw90u/piosenka17.flac?rlkey=dirczsfgef0nkeond7e9jj6t1&st=h1cv4q40&dl=1"}
+  { title: "Ye - WW3", src: "https://www.dropbox.com/scl/fi/44mea273gliafz0ow0h4a/piosenka.flac?rlkey=8gr7u7okgc9ed0ds9e7nbg8an&st=86by4y0u&raw=1"},
+  { title: "DJ Smokey - legalizenukes", src: "https://www.dropbox.com/scl/fi/r8j0aokwkd6x10w86394p/piosenka2.flac?rlkey=cstgsiayedxc41sq6rapok16p&st=q0ni4ta6&raw=1"},
+  { title: "Burzum - Dunkelheit", src: "https://www.dropbox.com/scl/fi/d8ecel8aylbp9zyw0wmfk/piosenka3.flac?rlkey=2xmgkge5os6ii3k7c1bsdw40e&st=myg4tncc&raw=1"},
+  { title: "Skrillex - SPITFIRE", src: "https://www.dropbox.com/scl/fi/wua8ekowuqe60mcspba24/piosenka4.flac?rlkey=z4h0ekjau0a8cfp7r2c0oe940&st=nw4y7dhz&raw=1"},
+  { title: "Playboi Carti - EVIL J0RDAN", src: "https://www.dropbox.com/scl/fi/5ydbuwmrdjdbrvhf2ke6t/piosenka5.flac?rlkey=948uaplt7louxzus2vx1okefo&st=mi5o8art&raw=1"},
+  { title: "The Prodigy - Omen", src: "https://www.dropbox.com/scl/fi/nciwthq9qf3b79i6qlz8k/piosenka6.flac?rlkey=l1hh7f554nsj8iw9ye8i5v103&st=urhqjpxs&raw=1"},
+  { title: "¥$ - CARNIVAL", src: "https://www.dropbox.com/scl/fi/4q8vzi85tdnolltdokkaz/piosenka7.flac?rlkey=yhymn53z09kqh7nrj6d06yxzl&st=2aa2zz83&raw=1"},
+  { title: "Lady Gaga - Poker Face", src: "https://www.dropbox.com/scl/fi/rnxhbe8mwyivf08lw11kz/piosenka8.flac?rlkey=ek0n177aycci129s9no36unv1&st=e05m33lr&raw=1"},
+  { title: "Linkin Park - Heavy Is the Crown", src: "https://www.dropbox.com/scl/fi/86pjmeoftnll98r2cz2k0/piosenka9.flac?rlkey=ekputmx54sz2dcl5dqp05gmy6&st=xdstztay&raw=1"},
+  { title: "Charli xcx - Von dutch", src: "https://www.dropbox.com/scl/fi/157duhpb5mbzakwc00c0y/piosenka10.flac?rlkey=1djhvktnp1s6o16mi8gt9tr4g&st=5znk4g49&raw=1"},
+  { title: "Pendulum - Tarantula", src: "https://www.dropbox.com/scl/fi/ii0p1yoodkptllqgx3608/piosenka11.flac?rlkey=x9oww4uy6jalvyr0hlt25tuw8&st=ni2qsbbw&raw=1" },
+  { title: "Limb Bizkit - Dad Vibes", src: "https://www.dropbox.com/scl/fi/7vywnqc9vdvgmvenwvgws/piosenka12.flac?rlkey=6k8r14t3atmoeeb88cbwpj3bc&st=xo85mrsn&raw=1"},
+  { title: "Big Pun - Twinz", src: "https://www.dropbox.com/scl/fi/ovwiqokz3udfjpye6ytlo/piosenka13.flac?rlkey=io8w4bw821uxqq1f98v3tqooo&st=c4qoaa7v&raw=1"},
+  { title: "Knocked Loose - Suffocate", src: "https://www.dropbox.com/scl/fi/td1phc3yc6qi1dip5vknh/piosenka14.flac?rlkey=log3j4oo68k962in7wq2h76wc&st=xiv5ife6&raw=1"},
+  { title: "Hechizeros Band - El Sonidito", src: "https://www.dropbox.com/scl/fi/mnbmwdgcbvt814x8tlpvl/piosenka15.flac?rlkey=hz0nafqt3oav65gbforgddyxj&st=2flmw7nl&raw=1"},
+  { title: "Sabrina Carpenter - Espresso", src: "https://www.dropbox.com/scl/fi/t1qxqx6h7itkyfmkfqhrf/piosenka16.flac?rlkey=829ny8ko7ln6cjxp0ybremkx7&st=336a0tdi&raw=1"},
+  { title: "Kizo - KIEROWNIK", src: "https://www.dropbox.com/scl/fi/u097yhh2ipu1rpzuhw90u/piosenka17.flac?rlkey=dirczsfgef0nkeond7e9jj6t1&st=h1cv4q40&raw=1"}
 ];
 
 // --- Zmienne do obsługi playlisty ---
@@ -107,19 +107,16 @@ function playRandomTrack() {
   } else {
     currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
   }
-  
+
+  isResuming = false;
   playCurrentTrack();
 }
 
 function playCurrentTrack() {
   backgroundMusic.src = playlist[currentTrackIndex].src;
   backgroundMusic.load();
-  
-  if (isPlaying) {
-    backgroundMusic.play().catch(e => console.log("Autoplay zablokowany przez przeglądarkę. Naciśnij przycisk play, aby kontynuować."));
-  }
-  
   updateTrackDisplay();
+  isResuming = false;
   saveSoundSettings();
 }
 
@@ -138,34 +135,77 @@ function togglePlayPause() {
     backgroundMusic.pause();
     playPauseBtn.textContent = '⏯';
     isPlaying = false;
+    isResuming = true;
   } else {
-    backgroundMusic.play()
-      .then(() => {
-        playPauseBtn.textContent = '⏸';
-        isPlaying = true;
-        window.musicPlayed = true;
-      })
-      .catch(e => console.log("Play error:", e));
+    if (firstClickOccurred) {
+      backgroundMusic.play()
+        .then(() => {
+          playPauseBtn.textContent = '⏸';
+          isPlaying = true;
+          
+          // Ustaw flagę, że muzyka jest włączona
+          if (!musicEnabledFlag) {
+            musicEnabledFlag = true;
+            saveSoundSettings();
+          }
+          
+          if (!isResuming) {
+            showNowPlayingNotification();
+          }
+          isResuming = false;
+        })
+        .catch(e => console.log("Play error:", e));
+    }
   }
   saveSoundSettings();
 }
 
 // --- Inicjalizacja odtwarzacza ---
 function initMusicPlayer() {
-  backgroundMusic.addEventListener('ended', playRandomTrack);
+  backgroundMusic.addEventListener('ended', () => {
+    playRandomTrack();
+    
+    // Automatyczne odtwarzanie następnego utworu po zakończeniu
+    if (isPlaying && firstClickOccurred) {
+      backgroundMusic.play()
+        .then(() => {
+          playPauseBtn.textContent = '⏸';
+          showNowPlayingNotification();
+        })
+        .catch(e => console.log("Błąd odtwarzania po zakończeniu:", e));
+    }
+  });
   
   playPauseBtn.addEventListener('click', togglePlayPause);
   
   prevTrackBtn.addEventListener('click', () => {
     currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
     playCurrentTrack();
+    
+    if (isPlaying && firstClickOccurred) {
+      backgroundMusic.play()
+        .then(() => {
+          showNowPlayingNotification();
+        })
+        .catch(e => console.log("Błąd odtwarzania:", e));
+    }
+    isResuming = false;
   });
   
-  nextTrackBtn.addEventListener('click', playRandomTrack);
+  nextTrackBtn.addEventListener('click', () => {
+    playRandomTrack();
+    
+    if (isPlaying && firstClickOccurred) {
+      backgroundMusic.play()
+        .then(() => {
+          showNowPlayingNotification();
+        })
+        .catch(e => console.log("Błąd odtwarzania:", e));
+    }
+    isResuming = false;
+  });
   
-  // Ustaw początkowy utwór
   playCurrentTrack();
-  updateTrackDisplay();
 }
 
 // --- Ustawienia początkowe głośności ---
@@ -220,28 +260,13 @@ function saveSoundSettings() {
     effectsVolume: effectsVolumeControl.value,
     effectsMuted: clickSound.muted,
     musicEnabled: musicEnabledFlag,
-    currentTrackIndex: currentTrackIndex,
-    isPlaying: isPlaying
+    isPlaying: isPlaying,
+    currentTrackIndex: currentTrackIndex
   };
   localStorage.setItem('cookieClickerSoundSettings', JSON.stringify(soundSettings));
 }
 
-// Funkcja sprawdzająca możliwość autoodtwarzania
-async function checkAutoplay() {
-  try {
-    await backgroundMusic.play();
-    return true;
-  } catch (e) {
-    // Loguj błąd tylko jeśli nie był już logowany
-    if (!window.autoplayErrorLogged) {
-      console.log("Autoodtwarzanie zostało zablokowane przez przeglądarkę.");
-      window.autoplayErrorLogged = true;
-    }
-    return false;
-  }
-}
-
-async function loadSoundSettings() {
+function loadSoundSettings() {
   const savedSettings = localStorage.getItem('cookieClickerSoundSettings');
   if (savedSettings) {
     soundSettings = JSON.parse(savedSettings);
@@ -263,34 +288,61 @@ async function loadSoundSettings() {
       sound.muted = soundSettings.effectsMuted;
     });
     effectsMuteButton.textContent = soundSettings.effectsMuted ? 'Odcisz efekty' : 'Wycisz efekty';
-
-    // Ustawienia playlisty
-    if (musicEnabledFlag) {
-      volumeSection.style.display = 'block';
-      enableMusicButton.style.display = 'none';
-      
-      backgroundMusic.src = playlist[currentTrackIndex].src;
-      backgroundMusic.load();
-      
-      if (isPlaying) {
-        try {
-          await backgroundMusic.play();
-          playPauseBtn.textContent = '⏸';
-        } catch (e) {
-          console.log("Play error on load:", e);
-          isPlaying = false;
-          playPauseBtn.textContent = '⏯';
-        }
-      } else {
-        playPauseBtn.textContent = '⏯';
-      }
-      
-      updateTrackDisplay();
-    }
+    
+    backgroundMusic.src = playlist[currentTrackIndex].src;
+    backgroundMusic.load();
+    
+    playPauseBtn.textContent = isPlaying ? '⏸' : '⏯';
+    
+    updateTrackDisplay();
+  } else {
+    playPauseBtn.textContent = '⏯';
   }
+}
+
+// Funkcja obsługująca pierwsze kliknięcie
+function handleFirstInteraction() {
+  if (firstClickOccurred) return;
+  firstClickOccurred = true;
   
-  // Aktualizuj przycisk play/pause
-  playPauseBtn.textContent = isPlaying ? '⏸' : '⏯';
+  if (musicEnabledFlag && isPlaying) {
+    backgroundMusic.play()
+      .then(() => {
+        playPauseBtn.textContent = '⏸';
+        showNowPlayingNotification();
+      })
+      .catch(e => console.log("Błąd odtwarzania po kliknięciu:", e));
+  }
+}
+
+// Nasłuchiwanie na pierwsze kliknięcie w dowolnym miejscu
+document.addEventListener('click', handleFirstInteraction);
+document.addEventListener('touchstart', handleFirstInteraction);
+
+function showNowPlayingNotification() {
+  if (!backgroundMusic || backgroundMusic.paused) return;
+  const nowPlaying = document.getElementById('nowPlaying');
+  const nowPlayingCover = document.getElementById('nowPlayingCover');
+  const nowPlayingTrack = document.getElementById('nowPlayingTrack');
+  
+  const track = playlist[currentTrackIndex];
+  const coverIndex = currentTrackIndex + 1;
+  
+  nowPlayingCover.src = `piosenka${coverIndex}.jpg`;
+  nowPlayingTrack.textContent = track.title;
+  
+  // Dodajemy krótkie opóźnienie dla lepszego efektu
+  setTimeout(() => {
+    nowPlaying.classList.add('show');
+  }, 100);
+
+  // Pokaż powiadomienie
+  nowPlaying.classList.add('show');
+  
+  // Ukryj po 5 sekundach
+  setTimeout(() => {
+    nowPlaying.classList.remove('show');
+  }, 5000);
 }
 
 // --- Ulepszenia produkcji ---
@@ -370,35 +422,47 @@ const upgradesDiv = document.getElementById('upgrades');
 const cursorUpgradesDiv = document.getElementById('cursorUpgrades');
 const ascensionMenu = document.getElementById('ascensionMenu');
 
+// --- Funkcja do obsługi sufiksów w języku polskim ---
+function getPolishSuffixForm(number, forms) {
+  // forms: [pojedyncza, mnoga, dopełniacz]
+  number = Math.abs(number);
+  if (number === 1) return forms[0];
+  if (number % 10 >= 2 && number % 10 <= 4 && (number % 100 < 10 || number % 100 >= 20)) return forms[1];
+  return forms[2];
+}
+
 function formatNumber(num) {
-  if (num < 1000) return Math.floor(num).toString();
+  if (num < 1 && num > 0) {
+    return num.toFixed(2);
+  }
   
+  const isInteger = Number.isInteger(num);
   const suffixes = [
-    { value: 1e33, suffix: ' decylion' },
-    { value: 1e30, suffix: ' nonylion' },
-    { value: 1e27, suffix: ' oktylion' },
-    { value: 1e24, suffix: ' septylion' },
-    { value: 1e21, suffix: ' sekstylion' },
-    { value: 1e18, suffix: ' kwintylion' },
-    { value: 1e15, suffix: ' kwadrylion' },
-    { value: 1e12, suffix: ' trylion' },
-    { value: 1e9, suffix: ' mld' },
-    { value: 1e6, suffix: ' mln' },
-    { value: 1e3, suffix: ' tys.' }
+    { value: 1e36, forms: [' undecylion', ' undecyliony', ' undecylionów'] },    
+    { value: 1e33, forms: [' decylion', ' decyliony', ' decylionów'] },
+    { value: 1e30, forms: [' nonylion', ' nonyliony', ' nonylionów'] },
+    { value: 1e27, forms: [' oktylion', ' oktyliony', ' oktylionów'] },
+    { value: 1e24, forms: [' septylion', ' septyliony', ' septylionów'] },
+    { value: 1e21, forms: [' sekstylion', ' sekstyliony', ' sekstylionów'] },
+    { value: 1e18, forms: [' kwintylion', ' kwintyliony', ' kwintylionów'] },
+    { value: 1e15, forms: [' kwadrylion', ' kwadryliony', ' kwadrylionów'] },
+    { value: 1e12, forms: [' trylion', ' tryliony', ' trylionów'] },
+    { value: 1e9, forms: [' mld', ' mld', ' mld'] },
+    { value: 1e6, forms: [' mln', ' mln', ' mln'] },
+    { value: 1e3, forms: [' tys.', ' tys.', ' tys.'] }
   ];
 
-  for (const { value, suffix } of suffixes) {
+  for (const { value, forms } of suffixes) {
     if (num >= value) {
       const divided = num / value;
-      // Jeśli liczba jest całkowita, wyświetl bez miejsc po przecinku
       if (Number.isInteger(divided)) {
-        return Math.floor(divided) + suffix;
+        return Math.floor(divided) + getPolishSuffixForm(Math.floor(divided), forms);
       }
-      // W przeciwnym razie wyświetl z 2 miejscami po przecinku
-      return divided.toFixed(2).replace(/\.?0+$/, '') + suffix;
+      return divided.toFixed(2).replace(/\.?0+$/, '') + getPolishSuffixForm(Math.floor(divided), forms);
     }
   }
-  return Math.floor(num);
+  
+  return isInteger ? Math.floor(num).toString() : num.toFixed(2).replace(/\.?0+$/, '');
 }
 
 function createUpgradeItem(upgrade, container, type) {
@@ -702,13 +766,26 @@ function createAutoCookieAnimation(numCookies) {
   }
 }
 
+function formatCPSValue(value) {
+  // Zaokrąglamy do 10 miejsc po przecinku, aby naprawić błędy precyzji
+  const rounded = Math.round(value * 10000000000) / 10000000000;
+  
+  // Sprawdzamy czy wartość jest praktycznie całkowita
+  if (Math.abs(rounded - Math.round(rounded)) < 0.0001) {
+    return Math.round(rounded).toString();
+  }
+  
+  // Formatujemy do 1 miejsca po przecinku, usuwamy niepotrzebne zera
+  return rounded.toFixed(1).replace(/\.0$/, '');
+}
+
 // --- Aktualizacja wyświetlanych wartości ---
 function updateDisplay() {
   countEl.textContent = formatNumber(count);
   
   const heavenlyMultiplier = getHeavenlyMultiplier();
   const cpsValue = cps * eventMultiplier * heavenlyMultiplier;
-  cpsEl.textContent = Number.isInteger(cpsValue) ? cpsValue : cpsValue.toFixed(1);
+  cpsEl.textContent = formatCPSValue(cpsValue);
   
   const heavenlyClickValue = getHeavenlyClickValue();
   const clickValueTotal = (clickValue + heavenlyClickValue) * eventMultiplier;
@@ -731,7 +808,8 @@ function updateDisplay() {
   } else {
     ascendBtn.title = '';
     ascendBtn.disabled = true;
-    ascendBtn.innerHTML = 'Potrzebujesz 1 mln ciastek';
+    const remaining = ASCENSION_THRESHOLD - cookiesBakedThisAscension;
+    ascendBtn.innerHTML = `Musisz zebrać jeszcze ${formatNumber(remaining > 0 ? remaining : 0)} ciastek`;
     ascendBtn.classList.add('disabled');
   }
   
@@ -928,27 +1006,6 @@ settingsToggle.addEventListener('click', () => {
 
 document.getElementById('closeSettings').addEventListener('click', function() {
   document.getElementById('settingsMenu').style.display = 'none';
-});
-
-enableMusicButton.addEventListener('click', async () => {
-  try {
-    musicEnabledFlag = true;
-    volumeSection.style.display = 'block';
-    enableMusicButton.style.display = 'none';
-    
-    backgroundMusic.src = playlist[currentTrackIndex].src;
-    backgroundMusic.load();
-    
-    const result = await backgroundMusic.play();
-    isPlaying = true;
-    playPauseBtn.textContent = '⏸';
-    saveSoundSettings();
-    
-    window.musicPlayed = true;
-  } catch (e) {
-    console.error("Błąd odtwarzania muzyki:", e);
-    alert("Błąd odtwarzania muzyki. Upewnij się, że masz włączony dźwięk w przeglądarce i spróbuj ponownie.");
-  }
 });
 
 function saveGame() {
@@ -1189,6 +1246,7 @@ renderAchievements();
 setBakeryName(generateRandomName());
 loadSoundSettings();
 loadGame();
+initMusicPlayer(); 
 
 // Dodaj obsługę przycisku ascension
 document.getElementById('ascendBtn').addEventListener('click', ascend);

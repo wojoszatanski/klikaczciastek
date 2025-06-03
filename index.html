@@ -14,6 +14,13 @@
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+  <div id="nowPlaying">
+    <img id="nowPlayingCover" src="" alt="Okładka albumu">
+    <div id="nowPlayingInfo">
+      <div id="nowPlayingTitle">Aktualny utwór:</div>
+      <div id="nowPlayingTrack">[brak]</div>
+    </div>
+  </div>
   <button id="settingsToggle" title="Ustawienia" style="position: fixed; top: 15px; right: 15px; z-index: 3000; border: none; font-size: 28px; color: white; cursor: pointer; text-shadow: 0 0 3px black;">⚙️</button>
   <audio id="backgroundMusic"></audio>
   <audio id="clickSound" src="click.mp3"></audio>
@@ -63,7 +70,6 @@
     <label for="effectsVolumeControl" style="color: #fff8dc; text-shadow: 1px 1px 3px #000;">Głośność efektów:</label>
     <input id="effectsVolumeControl" type="range" min="0" max="1" step="0.1" value="1" />
     <div><button id="effectsMuteButton" style="margin-top: 15px;">Wycisz efekty</button></div>
-    <button id="enableMusicButton" style="display: none; margin-top: 15px;">Włącz muzykę</button>
     <div id="volumeSection" style="margin-top: 20px;">
       <label for="volumeControl">Głośność muzyki:</label>
       <input id="volumeControl" type="range" min="0" max="1" step="0.1" value="1" />
@@ -86,7 +92,7 @@
       <button id="resetProgress">Zresetuj grę</button>
       <p style="margin-top: 30px;">Ostatni auto-zapis: <span id="lastSaveTime">Nigdy</span></p>
     </div>
-    <p style="text-align: right; font-size: 12px; color: #bbbbbb; margin-top: 25px;">Wersja: V17 | Autor: Wojciech Pielok</p>
+    <p style="text-align: right; font-size: 12px; color: #bbbbbb; margin-top: 25px;">Wersja: V18 | Autor: Wojciech Pielok</p>
   </div>
   <script src="script.js"></script>
 </body>
