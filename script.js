@@ -11,6 +11,8 @@ let cookieCounter = 0;
 let musicEnabledFlag = false;
 let firstClickOccurred = false;
 let isResuming = false;
+let lastEventTime = 0;
+const MIN_EVENT_INTERVAL = 300000; // Minimalny interwał między eventami (5 minut)
 
 // --- Nowy licznik ciastek upieczonych w sesji ---
 let cookiesBakedThisAscension = 0;
@@ -432,13 +434,33 @@ function getPolishSuffixForm(number, forms) {
 }
 
 function formatNumber(num) {
-  if (num < 1 && num > 0) {
-    return num.toFixed(2);
+  // Obsługa liczb bardzo bliskich zeru
+  if (Math.abs(num) < 0.00001) return "0";
+
+  // Obsługa liczb ułamkowych (0 < num < 1)
+  if (num < 1) {
+    return num.toFixed(2).replace(/\.?0+$/, '');
   }
-  
-  const isInteger = Number.isInteger(num);
+
+  // Sprawdzenie czy liczba jest "prawie całkowita"
+  const rounded = Math.round(num);
+  if (Math.abs(num - rounded) < 0.0001) {
+    num = rounded;
+  }
+
+  // Obsługa liczb całkowitych < 1000
+  if (Number.isInteger(num) && num < 1000) {
+    return num.toString();
+  }
+
+  // Obsługa liczb < 1000 z częścią ułamkową
+  if (num < 1000) {
+    return num.toFixed(1).replace(/\.0$/, '');
+  }
+
+  // Obsługa dużych liczb z przyrostkami
   const suffixes = [
-    { value: 1e36, forms: [' undecylion', ' undecyliony', ' undecylionów'] },    
+    { value: 1e36, forms: [' undecylion', ' undecyliony', ' undecylionów'] },
     { value: 1e33, forms: [' decylion', ' decyliony', ' decylionów'] },
     { value: 1e30, forms: [' nonylion', ' nonyliony', ' nonylionów'] },
     { value: 1e27, forms: [' oktylion', ' oktyliony', ' oktylionów'] },
@@ -455,14 +477,20 @@ function formatNumber(num) {
   for (const { value, forms } of suffixes) {
     if (num >= value) {
       const divided = num / value;
-      if (Number.isInteger(divided)) {
-        return Math.floor(divided) + getPolishSuffixForm(Math.floor(divided), forms);
+      
+      // Sprawdź czy wynik dzielenia jest prawie całkowity
+      const roundedDivided = Math.round(divided);
+      if (Math.abs(divided - roundedDivided) < 0.0001) {
+        return roundedDivided + getPolishSuffixForm(roundedDivided, forms);
       }
+      
+      // Formatuj z 2 miejscami po przecinku
       return divided.toFixed(2).replace(/\.?0+$/, '') + getPolishSuffixForm(Math.floor(divided), forms);
     }
   }
-  
-  return isInteger ? Math.floor(num).toString() : num.toFixed(2).replace(/\.?0+$/, '');
+
+  // Domyślne formatowanie dla liczb < 1000
+  return num.toFixed(1).replace(/\.0$/, '');
 }
 
 function createUpgradeItem(upgrade, container, type) {
@@ -766,26 +794,13 @@ function createAutoCookieAnimation(numCookies) {
   }
 }
 
-function formatCPSValue(value) {
-  // Zaokrąglamy do 10 miejsc po przecinku, aby naprawić błędy precyzji
-  const rounded = Math.round(value * 10000000000) / 10000000000;
-  
-  // Sprawdzamy czy wartość jest praktycznie całkowita
-  if (Math.abs(rounded - Math.round(rounded)) < 0.0001) {
-    return Math.round(rounded).toString();
-  }
-  
-  // Formatujemy do 1 miejsca po przecinku, usuwamy niepotrzebne zera
-  return rounded.toFixed(1).replace(/\.0$/, '');
-}
-
 // --- Aktualizacja wyświetlanych wartości ---
 function updateDisplay() {
   countEl.textContent = formatNumber(count);
   
   const heavenlyMultiplier = getHeavenlyMultiplier();
   const cpsValue = cps * eventMultiplier * heavenlyMultiplier;
-  cpsEl.textContent = formatCPSValue(cpsValue);
+  cpsEl.textContent = formatNumber(cpsValue);
   
   const heavenlyClickValue = getHeavenlyClickValue();
   const clickValueTotal = (clickValue + heavenlyClickValue) * eventMultiplier;
@@ -885,9 +900,11 @@ function createFlyingCookie(x, y, baseValue) {
 const eventBox = document.getElementById('eventBox');
 
 function startRandomEvent() {
-  if(eventActive) return;
+  // Sprawdź czy minął wymagany czas od ostatniego eventu
+  const now = Date.now();
+  if (eventActive || (now - lastEventTime) < MIN_EVENT_INTERVAL) return;
   
-  const baseChance = 0.005;
+  const baseChance = 0.001;
   const eventChanceMultiplier = getEventChanceMultiplier();
   const actualChance = baseChance * eventChanceMultiplier;
   
@@ -895,18 +912,24 @@ function startRandomEvent() {
   if (rand < actualChance) {
     eventActive = true;
     eventMultiplier = 2;
+    lastEventTime = now; // Zapisz czas wystąpienia eventu
+    
     eventSound.currentTime = 0;
     eventSound.play();
-    showEvent('Wydarzenie: Podwójne ciastka przez 10 sekund!', 'event');
+    
+    // Dodaj informację o czasie trwania eventu
+    const eventDuration = 30000;
+    showEvent(`Wydarzenie: Podwójne ciastka przez ${eventDuration/1000} sekund!`, 'event');
+    
     setTimeout(() => {
       eventMultiplier = 1;
       eventActive = false;
       hideEvent();
-    }, 10000);
+    }, eventDuration);
   }
 }
 
-function showEvent(message, type) {
+function showEvent(message, type, duration) {
   eventBox.textContent = message;
   eventBox.classList.add('show');
   
@@ -920,11 +943,39 @@ function showEvent(message, type) {
     eventBox.classList.add('ascension-type');
   } else {
     eventBox.classList.add('event-type');
+    
+    // Dodaj licznik czasu dla eventów
+    if (duration) {
+      const timer = document.createElement('div');
+      timer.id = 'eventTimer';
+      timer.style.marginTop = '5px';
+      timer.style.fontSize = '0.8em';
+      eventBox.appendChild(timer);
+      
+      // Aktualizuj licznik co sekundę
+      const updateTimer = () => {
+        const secondsLeft = Math.ceil(duration / 1000);
+        timer.textContent = `Kończy się za: ${secondsLeft}s`;
+        duration -= 1000;
+        
+        if (duration > 0) {
+          setTimeout(updateTimer, 1000);
+        } else {
+          timer.remove();
+        }
+      };
+      
+      updateTimer();
+    }
   }
 }
 
 function hideEvent() {
+  const timer = document.getElementById('eventTimer');
+  if (timer) timer.remove();
+  
   eventBox.classList.remove('show');
+  eventBox.innerHTML = ''; // Wyczyść zawartość
 }
 
 // --- Sprawdzanie osiągnięć ---
@@ -1230,8 +1281,12 @@ function resetGame() {
 // --- Pętla gry ---
 setInterval(() => {
   addCookiesPerSecond();
-  startRandomEvent();
 }, 100);
+
+// Sprawdzaj eventy tylko co sekundę
+setInterval(() => {
+  startRandomEvent();
+}, 1000);
 
 setInterval(() => {
   playTimeSeconds++;
