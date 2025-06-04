@@ -68,23 +68,23 @@ const shuffleButton = document.getElementById('shuffleButton');
 
 // --- Playlista ---
 const playlist = [
-  { title: "Ye - WW3", src: "https://www.dropbox.com/scl/fi/44mea273gliafz0ow0h4a/piosenka.flac?rlkey=8gr7u7okgc9ed0ds9e7nbg8an&st=86by4y0u&raw=1"},
-  { title: "DJ Smokey - legalizenukes", src: "https://www.dropbox.com/scl/fi/r8j0aokwkd6x10w86394p/piosenka2.flac?rlkey=cstgsiayedxc41sq6rapok16p&st=q0ni4ta6&raw=1"},
-  { title: "Burzum - Dunkelheit", src: "https://www.dropbox.com/scl/fi/d8ecel8aylbp9zyw0wmfk/piosenka3.flac?rlkey=2xmgkge5os6ii3k7c1bsdw40e&st=myg4tncc&raw=1"},
-  { title: "Skrillex - SPITFIRE", src: "https://www.dropbox.com/scl/fi/wua8ekowuqe60mcspba24/piosenka4.flac?rlkey=z4h0ekjau0a8cfp7r2c0oe940&st=nw4y7dhz&raw=1"},
-  { title: "Playboi Carti - EVIL J0RDAN", src: "https://www.dropbox.com/scl/fi/5ydbuwmrdjdbrvhf2ke6t/piosenka5.flac?rlkey=948uaplt7louxzus2vx1okefo&st=mi5o8art&raw=1"},
-  { title: "The Prodigy - Omen", src: "https://www.dropbox.com/scl/fi/nciwthq9qf3b79i6qlz8k/piosenka6.flac?rlkey=l1hh7f554nsj8iw9ye8i5v103&st=urhqjpxs&raw=1"},
-  { title: "¥$ - CARNIVAL", src: "https://www.dropbox.com/scl/fi/4q8vzi85tdnolltdokkaz/piosenka7.flac?rlkey=yhymn53z09kqh7nrj6d06yxzl&st=2aa2zz83&raw=1"},
-  { title: "Lady Gaga - Poker Face", src: "https://www.dropbox.com/scl/fi/rnxhbe8mwyivf08lw11kz/piosenka8.flac?rlkey=ek0n177aycci129s9no36unv1&st=e05m33lr&raw=1"},
-  { title: "Linkin Park - Heavy Is the Crown", src: "https://www.dropbox.com/scl/fi/86pjmeoftnll98r2cz2k0/piosenka9.flac?rlkey=ekputmx54sz2dcl5dqp05gmy6&st=xdstztay&raw=1"},
-  { title: "Charli xcx - Von dutch", src: "https://www.dropbox.com/scl/fi/157duhpb5mbzakwc00c0y/piosenka10.flac?rlkey=1djhvktnp1s6o16mi8gt9tr4g&st=5znk4g49&raw=1"},
-  { title: "Pendulum - Tarantula", src: "https://www.dropbox.com/scl/fi/ii0p1yoodkptllqgx3608/piosenka11.flac?rlkey=x9oww4uy6jalvyr0hlt25tuw8&st=ni2qsbbw&raw=1" },
-  { title: "Limb Bizkit - Dad Vibes", src: "https://www.dropbox.com/scl/fi/7vywnqc9vdvgmvenwvgws/piosenka12.flac?rlkey=6k8r14t3atmoeeb88cbwpj3bc&st=xo85mrsn&raw=1"},
-  { title: "Big Pun - Twinz", src: "https://www.dropbox.com/scl/fi/ovwiqokz3udfjpye6ytlo/piosenka13.flac?rlkey=io8w4bw821uxqq1f98v3tqooo&st=c4qoaa7v&raw=1"},
-  { title: "Knocked Loose - Suffocate", src: "https://www.dropbox.com/scl/fi/td1phc3yc6qi1dip5vknh/piosenka14.flac?rlkey=log3j4oo68k962in7wq2h76wc&st=xiv5ife6&raw=1"},
-  { title: "Hechizeros Band - El Sonidito", src: "https://www.dropbox.com/scl/fi/mnbmwdgcbvt814x8tlpvl/piosenka15.flac?rlkey=hz0nafqt3oav65gbforgddyxj&st=2flmw7nl&raw=1"},
-  { title: "Sabrina Carpenter - Espresso", src: "https://www.dropbox.com/scl/fi/t1qxqx6h7itkyfmkfqhrf/piosenka16.flac?rlkey=829ny8ko7ln6cjxp0ybremkx7&st=336a0tdi&raw=1"},
-  { title: "Kizo - KIEROWNIK", src: "https://www.dropbox.com/scl/fi/u097yhh2ipu1rpzuhw90u/piosenka17.flac?rlkey=dirczsfgef0nkeond7e9jj6t1&st=h1cv4q40&raw=1"}
+  { title: "Ye - WW3", src: "piosenka1.mp3"},
+  { title: "DJ Smokey - legalizenukes", src: "piosenka2.mp3"},
+  { title: "Burzum - Dunkelheit", src: "piosenka3.mp3"},
+  { title: "Skrillex - SPITFIRE", src: "piosenka4.mp3"},
+  { title: "Playboi Carti - EVIL J0RDAN", src: "piosenka5.mp3"},
+  { title: "The Prodigy - Omen", src: "piosenka6.mp3"},
+  { title: "¥$ - CARNIVAL", src: "piosenka7.mp3"},
+  { title: "Lady Gaga - Poker Face", src: "piosenka8.mp3"},
+  { title: "Linkin Park - Heavy Is the Crown", src: "piosenka9.mp3"},
+  { title: "Charli xcx - Von dutch", src: "piosenka10.mp3"},
+  { title: "Pendulum - Tarantula", src: "piosenka11.mp3"},
+  { title: "Limb Bizkit - Dad Vibes", src: "piosenka12.mp3"},
+  { title: "Big Pun - Twinz", src: "piosenka13.mp3"},
+  { title: "Knocked Loose - Suffocate", src: "piosenka14.mp3"},
+  { title: "Hechizeros Band - El Sonidito", src: "piosenka15.mp3"},
+  { title: "Sabrina Carpenter - Espresso", src: "piosenka16.mp3"},
+  { title: "Kizo - KIEROWNIK", src: "piosenka17.mp3"}
 ];
 
 // --- Zmienne do obsługi playlisty ---
@@ -175,14 +175,39 @@ function toggleShuffle() {
   saveSoundSettings();
 }
 
+// --- Funkcje do obsługi playlisty ---
+function playNextTrack() {
+  if (isShuffle) {
+    let newIndex;
+    do {
+      newIndex = Math.floor(Math.random() * playlist.length);
+    } while (newIndex === currentTrackIndex && playlist.length > 1);
+    currentTrackIndex = newIndex;
+  } else {
+    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+  }
+  playCurrentTrack();
+}
+
+function playPrevTrack() {
+  if (isShuffle) {
+    let newIndex;
+    do {
+      newIndex = Math.floor(Math.random() * playlist.length);
+    } while (newIndex === currentTrackIndex && playlist.length > 1);
+    currentTrackIndex = newIndex;
+  } else {
+    currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+  }
+  playCurrentTrack();
+}
 
 // --- Inicjalizacja odtwarzacza ---
 function initMusicPlayer() {
   backgroundMusic.addEventListener('ended', () => {
-    playRandomTrack(); // Tylko zmienia utwór
-    
+    playNextTrack();
     if (isPlaying && firstClickOccurred) {
-      backgroundMusic.play() // Odtwarza zmieniony utwór
+      backgroundMusic.play()
         .then(() => {
           playPauseBtn.textContent = '⏸';
           showNowPlayingNotification();
@@ -190,13 +215,11 @@ function initMusicPlayer() {
         .catch(e => console.log("Błąd odtwarzania po zakończeniu:", e));
     }
   });
-  
+
   playPauseBtn.addEventListener('click', togglePlayPause);
-  
+
   prevTrackBtn.addEventListener('click', () => {
-    currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
-    playCurrentTrack();
-    
+    playPrevTrack();
     if (isPlaying && firstClickOccurred) {
       backgroundMusic.play()
         .then(() => {
@@ -206,10 +229,9 @@ function initMusicPlayer() {
     }
     isResuming = false;
   });
-  
+
   nextTrackBtn.addEventListener('click', () => {
-    playRandomTrack();
-    
+    playNextTrack();
     if (isPlaying && firstClickOccurred) {
       backgroundMusic.play()
         .then(() => {
@@ -219,10 +241,9 @@ function initMusicPlayer() {
     }
     isResuming = false;
   });
-  
-  // Dodajemy nasłuchiwanie dla shuffleButton
+
   shuffleButton.addEventListener('click', toggleShuffle);
-  
+
   playCurrentTrack();
 }
 
