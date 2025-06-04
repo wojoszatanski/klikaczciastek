@@ -8,7 +8,7 @@ let accumulatedCookies = 0;
 let playTimeSeconds = 0;
 let lastSaveTime = null;
 let cookieCounter = 0;
-let musicEnabledFlag = false;
+let musicEnabledFlag = true;
 let firstClickOccurred = false;
 let isResuming = false;
 let lastEventTime = 0;
@@ -64,6 +64,7 @@ const effectsVolumeControl = document.getElementById('effectsVolumeControl');
 const buyHeavenlySound = document.getElementById('buyHeavenlySound');
 const ascendSound = document.getElementById('ascendSound');
 const backgroundMusic = document.getElementById('backgroundMusic');
+const shuffleButton = document.getElementById('shuffleButton');
 
 // --- Playlista ---
 const playlist = [
@@ -107,10 +108,10 @@ function playRandomTrack() {
     
     currentTrackIndex = newIndex;
   } else {
+    // Normalna kolejność - przejście do następnego utworu
     currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
   }
 
-  isResuming = false;
   playCurrentTrack();
 }
 
@@ -134,42 +135,54 @@ function updateTrackDisplay() {
 
 function togglePlayPause() {
   if (isPlaying) {
+    // PAUZA
     backgroundMusic.pause();
     playPauseBtn.textContent = '⏯';
     isPlaying = false;
-    isResuming = true;
+    isResuming = true;  // Oznacz jako wznowienie przy następnym odtwarzaniu
+    musicEnabledFlag = false;
+    saveSoundSettings();
+    
   } else {
-    if (firstClickOccurred) {
-      backgroundMusic.play()
-        .then(() => {
-          playPauseBtn.textContent = '⏸';
-          isPlaying = true;
-          
-          // Ustaw flagę, że muzyka jest włączona
-          if (!musicEnabledFlag) {
-            musicEnabledFlag = true;
-            saveSoundSettings();
-          }
-          
-          if (!isResuming) {
-            showNowPlayingNotification();
-          }
-          isResuming = false;
-        })
-        .catch(e => console.log("Play error:", e));
+    // ODTWARZANIE
+    if (!firstClickOccurred) {
+      handleFirstInteraction(); // Obsługa pierwszej interakcji
+      return; // Wyjdź z funkcji
     }
+
+    backgroundMusic.play()
+      .then(() => {
+        playPauseBtn.textContent = '⏸';
+        isPlaying = true;
+        musicEnabledFlag = true;
+        saveSoundSettings();
+        
+        // Pokaż powiadomienie TYLKO przy nowym odtwarzaniu (nie przy wznowieniu)
+        if (!isResuming) {
+          showNowPlayingNotification();
+        }
+        isResuming = false; // Zresetuj flagę wznowienia
+      })
+      .catch(e => console.log("Błąd odtwarzania:", e));
   }
+}
+
+// --- Funkcja do przełączania trybu shuffle ---
+function toggleShuffle() {
+  isShuffle = !isShuffle;
+  shuffleButton.textContent = isShuffle ? '🔀 (ON)' : '🔀';
+  shuffleButton.style.color = isShuffle ? '#3a86ff' : 'white';
   saveSoundSettings();
 }
+
 
 // --- Inicjalizacja odtwarzacza ---
 function initMusicPlayer() {
   backgroundMusic.addEventListener('ended', () => {
-    playRandomTrack();
+    playRandomTrack(); // Tylko zmienia utwór
     
-    // Automatyczne odtwarzanie następnego utworu po zakończeniu
     if (isPlaying && firstClickOccurred) {
-      backgroundMusic.play()
+      backgroundMusic.play() // Odtwarza zmieniony utwór
         .then(() => {
           playPauseBtn.textContent = '⏸';
           showNowPlayingNotification();
@@ -206,6 +219,9 @@ function initMusicPlayer() {
     }
     isResuming = false;
   });
+  
+  // Dodajemy nasłuchiwanie dla shuffleButton
+  shuffleButton.addEventListener('click', toggleShuffle);
   
   playCurrentTrack();
 }
@@ -262,7 +278,7 @@ function saveSoundSettings() {
     effectsVolume: effectsVolumeControl.value,
     effectsMuted: clickSound.muted,
     musicEnabled: musicEnabledFlag,
-    isPlaying: isPlaying,
+    isShuffle: isShuffle,
     currentTrackIndex: currentTrackIndex
   };
   localStorage.setItem('cookieClickerSoundSettings', JSON.stringify(soundSettings));
@@ -291,6 +307,11 @@ function loadSoundSettings() {
     });
     effectsMuteButton.textContent = soundSettings.effectsMuted ? 'Odcisz efekty' : 'Wycisz efekty';
     
+    // Wczytaj ustawienia shuffle
+    isShuffle = soundSettings.isShuffle || false;
+    shuffleButton.textContent = isShuffle ? '🔀 (ON)' : '🔀';
+    shuffleButton.style.color = isShuffle ? '#3a86ff' : 'white';
+
     backgroundMusic.src = playlist[currentTrackIndex].src;
     backgroundMusic.load();
     
@@ -299,6 +320,7 @@ function loadSoundSettings() {
     updateTrackDisplay();
   } else {
     playPauseBtn.textContent = '⏯';
+    shuffleButton.textContent = '🔀';
   }
 }
 
@@ -307,10 +329,11 @@ function handleFirstInteraction() {
   if (firstClickOccurred) return;
   firstClickOccurred = true;
   
-  if (musicEnabledFlag && isPlaying) {
+  if (musicEnabledFlag) {
     backgroundMusic.play()
       .then(() => {
         playPauseBtn.textContent = '⏸';
+        isPlaying = true;
         showNowPlayingNotification();
       })
       .catch(e => console.log("Błąd odtwarzania po kliknięciu:", e));
@@ -545,7 +568,7 @@ function renderUpgrades() {
 
 // --- Funkcje prestiżowe ---
 function calculateHeavenlyChips() {
-  return Math.floor(Math.sqrt(cookiesBakedThisAscension / 1000000));
+  return Math.floor(Math.floor(cookiesBakedThisAscension / 1000000));
 }
 
 function updateHeavenlyChipsDisplay() {
