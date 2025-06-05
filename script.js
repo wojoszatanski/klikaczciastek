@@ -118,8 +118,19 @@ function playRandomTrack() {
 function playCurrentTrack() {
   backgroundMusic.src = playlist[currentTrackIndex].src;
   backgroundMusic.load();
+  
+  // Jeśli muzyka powinna być odtwarzana, spróbuj włączyć
+  if (isPlaying) {
+    backgroundMusic.play()
+      .then(() => {
+        playPauseBtn.textContent = '⏸';
+        if (!isResuming) showNowPlayingNotification();
+        isResuming = false;
+      })
+      .catch(e => console.log("Błąd odtwarzania w playCurrentTrack:", e));
+  }
+  
   updateTrackDisplay();
-  isResuming = false;
   saveSoundSettings();
 }
 
@@ -128,7 +139,7 @@ function updateTrackDisplay() {
   
   // Ustawienie okładki albumu
   const albumCover = document.getElementById('albumCover');
-  const coverIndex = currentTrackIndex + 1; // bo playlist[0] to piosenka1
+  const coverIndex = currentTrackIndex + 1;
   albumCover.src = `piosenka${coverIndex}.jpg`;
   albumCover.style.display = 'block';
 }
@@ -139,32 +150,24 @@ function togglePlayPause() {
     backgroundMusic.pause();
     playPauseBtn.textContent = '⏯';
     isPlaying = false;
-    isResuming = true;  // Oznacz jako wznowienie przy następnym odtwarzaniu
-    musicEnabledFlag = false;
-    saveSoundSettings();
-    
+    isResuming = true;
+    musicEnabledFlag = false; // PROBLEM: Ustawiasz flagę na false
   } else {
-    // ODTWARZANIE
     if (!firstClickOccurred) {
-      handleFirstInteraction(); // Obsługa pierwszej interakcji
-      return; // Wyjdź z funkcji
+      handleFirstInteraction();
+      return;
     }
 
     backgroundMusic.play()
       .then(() => {
         playPauseBtn.textContent = '⏸';
         isPlaying = true;
-        musicEnabledFlag = true;
-        saveSoundSettings();
-        
-        // Pokaż powiadomienie TYLKO przy nowym odtwarzaniu (nie przy wznowieniu)
-        if (!isResuming) {
-          showNowPlayingNotification();
-        }
-        isResuming = false; // Zresetuj flagę wznowienia
+        musicEnabledFlag = true; // DODAJ TO!
+        if (!isResuming) showNowPlayingNotification();
+        isResuming = false;
       })
-      .catch(e => console.log("Błąd odtwarzania:", e));
   }
+  saveSoundSettings();
 }
 
 // --- Funkcja do przełączania trybu shuffle ---
@@ -177,6 +180,9 @@ function toggleShuffle() {
 
 // --- Funkcje do obsługi playlisty ---
 function playNextTrack() {
+  // Zapamiętaj czy muzyka była odtwarzana przed zmianą
+  const wasPlaying = isPlaying;
+  
   if (isShuffle) {
     let newIndex;
     do {
@@ -186,10 +192,27 @@ function playNextTrack() {
   } else {
     currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
   }
+  
   playCurrentTrack();
+  
+  // Jeśli muzyka była odtwarzana, wznów odtwarzanie
+  if (wasPlaying) {
+    backgroundMusic.play()
+      .then(() => {
+        isPlaying = true;
+        playPauseBtn.textContent = '⏸';
+        showNowPlayingNotification();
+      })
+      .catch(e => console.log("Błąd odtwarzania po next:", e));
+  }
+  
+  saveSoundSettings();
 }
 
 function playPrevTrack() {
+  // Zapamiętaj czy muzyka była odtwarzana przed zmianą
+  const wasPlaying = isPlaying;
+  
   if (isShuffle) {
     let newIndex;
     do {
@@ -199,9 +222,22 @@ function playPrevTrack() {
   } else {
     currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
   }
+  
   playCurrentTrack();
+  
+  // Jeśli muzyka była odtwarzana, wznów odtwarzanie
+  if (wasPlaying) {
+    backgroundMusic.play()
+      .then(() => {
+        isPlaying = true;
+        playPauseBtn.textContent = '⏸';
+        showNowPlayingNotification();
+      })
+      .catch(e => console.log("Błąd odtwarzania po prev:", e));
+  }
+  
+  saveSoundSettings();
 }
-
 // --- Inicjalizacja odtwarzacza ---
 function initMusicPlayer() {
   backgroundMusic.addEventListener('ended', () => {
@@ -217,34 +253,11 @@ function initMusicPlayer() {
   });
 
   playPauseBtn.addEventListener('click', togglePlayPause);
-
-  prevTrackBtn.addEventListener('click', () => {
-    playPrevTrack();
-    if (isPlaying && firstClickOccurred) {
-      backgroundMusic.play()
-        .then(() => {
-          showNowPlayingNotification();
-        })
-        .catch(e => console.log("Błąd odtwarzania:", e));
-    }
-    isResuming = false;
-  });
-
-  nextTrackBtn.addEventListener('click', () => {
-    playNextTrack();
-    if (isPlaying && firstClickOccurred) {
-      backgroundMusic.play()
-        .then(() => {
-          showNowPlayingNotification();
-        })
-        .catch(e => console.log("Błąd odtwarzania:", e));
-    }
-    isResuming = false;
-  });
-
+  prevTrackBtn.addEventListener('click', playPrevTrack);
+  nextTrackBtn.addEventListener('click', playNextTrack);
   shuffleButton.addEventListener('click', toggleShuffle);
 
-  playCurrentTrack();
+  updateTrackDisplay();
 }
 
 // --- Ustawienia początkowe głośności ---
@@ -299,6 +312,7 @@ function saveSoundSettings() {
     effectsVolume: effectsVolumeControl.value,
     effectsMuted: clickSound.muted,
     musicEnabled: musicEnabledFlag,
+    isPlaying: isPlaying,
     isShuffle: isShuffle,
     currentTrackIndex: currentTrackIndex
   };
@@ -313,6 +327,7 @@ function loadSoundSettings() {
     musicEnabledFlag = soundSettings.musicEnabled || false;
     currentTrackIndex = soundSettings.currentTrackIndex || 0;
     isPlaying = soundSettings.isPlaying || false;
+    isShuffle = soundSettings.isShuffle || false;
 
     // Ustawienia muzyki
     volumeControl.value = soundSettings.musicVolume;
@@ -339,6 +354,7 @@ function loadSoundSettings() {
     playPauseBtn.textContent = isPlaying ? '⏸' : '⏯';
     
     updateTrackDisplay();
+    
   } else {
     playPauseBtn.textContent = '⏯';
     shuffleButton.textContent = '🔀';
@@ -347,18 +363,18 @@ function loadSoundSettings() {
 
 // Funkcja obsługująca pierwsze kliknięcie
 function handleFirstInteraction() {
-  if (firstClickOccurred) return;
-  firstClickOccurred = true;
-  
-  if (musicEnabledFlag) {
-    backgroundMusic.play()
-      .then(() => {
-        playPauseBtn.textContent = '⏸';
-        isPlaying = true;
-        showNowPlayingNotification();
-      })
-      .catch(e => console.log("Błąd odtwarzania po kliknięciu:", e));
-  }
+    if (firstClickOccurred) return;
+    firstClickOccurred = true;
+    
+    // Dodaj warunek sprawdzający flagę
+    if (musicEnabledFlag && isPlaying) {
+        backgroundMusic.play()
+            .then(() => {
+                playPauseBtn.textContent = '⏸';
+                showNowPlayingNotification();
+            })
+            .catch(e => console.log("Błąd odtwarzania po kliknięciu:", e));
+    }
 }
 
 // Nasłuchiwanie na pierwsze kliknięcie w dowolnym miejscu
@@ -377,15 +393,10 @@ function showNowPlayingNotification() {
   nowPlayingCover.src = `piosenka${coverIndex}.jpg`;
   nowPlayingTrack.textContent = track.title;
   
-  // Dodajemy krótkie opóźnienie dla lepszego efektu
   setTimeout(() => {
     nowPlaying.classList.add('show');
-  }, 100);
+  });
 
-  // Pokaż powiadomienie
-  nowPlaying.classList.add('show');
-  
-  // Ukryj po 5 sekundach
   setTimeout(() => {
     nowPlaying.classList.remove('show');
   }, 5000);
