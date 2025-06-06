@@ -40,6 +40,82 @@ const heavenlyUpgrades = [
   { id: 'hc10', name: 'Ostateczna Doskonałość', description: '+100% do ciastek na sekundę na zawsze', cost: 10000, effect: { cpsMultiplier: 1.0 }, purchased: false }
 ];
 
+// --- Kody promocyjne ---
+const promoCodes = [
+  { code: 'STARTERPACK', reward: 1000, message: 'Otrzymujesz 1000 ciastek! Witamy w grze!', used: false }
+];
+
+let usedPromoCodes = JSON.parse(localStorage.getItem('cookieClickerUsedPromoCodes') || '[]');
+
+// Inicjalizacja użytych kodów
+function initPromoCodes() {
+  promoCodes.forEach(promo => {
+    promo.used = usedPromoCodes.includes(promo.code);
+  });
+}
+
+// Obsługa realizacji kodu
+document.getElementById('redeemPromoCode').addEventListener('click', function() {
+  const input = document.getElementById('promoCodeInput');
+  const message = document.getElementById('promoCodeMessage');
+  const code = input.value.trim();
+  
+  if (!code) {
+    message.textContent = 'Wprowadź kod promocyjny.';
+    // Ukryj wiadomość po 5 sekundach
+    setTimeout(() => {
+      message.textContent = '';
+      message.style.minHeight = '0'; // Dodane: reset minimalnej wysokości
+    }, 5000);
+    return;
+  }
+
+  
+  // Sprawdź czy kod został już wykorzystany
+  if (usedPromoCodes.some(usedCode => usedCode === code)) {
+    message.textContent = 'Ten kod został już wykorzystany.';
+    // Ukryj wiadomość po 5 sekundach
+    setTimeout(() => {
+      message.textContent = '';
+      message.style.minHeight = '0'; // Dodane: reset minimalnej wysokości
+    }, 5000);
+    return;
+  }
+  
+  // Znajdź kod w dostępnych promocjach
+  const promo = promoCodes.find(p => p.code === code);
+  
+  if (promo) {
+    // Przyznaj nagrodę
+    count += promo.reward;
+    cookiesBakedThisAscension += promo.reward;
+    promo.used = true;
+    usedPromoCodes.push(code);
+    localStorage.setItem('cookieClickerUsedPromoCodes', JSON.stringify(usedPromoCodes));
+    saveGame(); 
+    
+    message.textContent = promo.message;
+    // Ukryj wiadomość po 5 sekundach
+    setTimeout(() => {
+      message.textContent = '';
+      message.style.minHeight = '0'; // Dodane: reset minimalnej wysokości
+    }, 5000);
+    
+    updateDisplay();
+    checkAchievements();
+        
+    // Wyczyść pole wprowadzania
+    input.value = '';
+  } else {
+    message.textContent = 'Nieprawidłowy kod promocyjny.';
+    // Ukryj wiadomość po 5 sekundach
+    setTimeout(() => {
+      message.textContent = '';
+      message.style.minHeight = '0'; // Dodane: reset minimalnej wysokości
+    }, 5000);
+  }
+});
+
 // --- Referencje do elementów ---
 const cookieBtn = document.getElementById('cookieBtn');
 const countEl = document.getElementById('count');
@@ -145,36 +221,41 @@ function updateTrackDisplay() {
 }
 
 function togglePlayPause() {
-  if (isPlaying) {
-    // PAUZA
-    backgroundMusic.pause();
-    playPauseBtn.textContent = '⏯';
-    isPlaying = false;
-    isResuming = true;
-    musicEnabledFlag = false; // PROBLEM: Ustawiasz flagę na false
-  } else {
-    if (!firstClickOccurred) {
-      handleFirstInteraction();
-      return;
+    if (isPlaying) {
+        backgroundMusic.pause();
+        playPauseBtn.textContent = '⏯';
+        isPlaying = false;
+        isResuming = true;
+        musicEnabledFlag = false; // Ustaw na false przy pauzowaniu
+    } else {
+        // Ustaw flagę na true przy włączaniu odtwarzania
+        musicEnabledFlag = true;
+        
+        if (!firstClickOccurred) {
+            handleFirstInteraction();
+        } else {
+            backgroundMusic.play()
+                .then(() => {
+                    playPauseBtn.textContent = '⏸';
+                    isPlaying = true;
+                    if (!isResuming) showNowPlayingNotification();
+                    isResuming = false;
+                })
+                .catch(e => {
+                    console.log("Błąd odtwarzania:", e);
+                    playPauseBtn.textContent = '⏯';
+                    isPlaying = false;
+                });
+        }
     }
-
-    backgroundMusic.play()
-      .then(() => {
-        playPauseBtn.textContent = '⏸';
-        isPlaying = true;
-        musicEnabledFlag = true; // DODAJ TO!
-        if (!isResuming) showNowPlayingNotification();
-        isResuming = false;
-      })
-  }
-  saveSoundSettings();
+    saveSoundSettings();
 }
 
 // --- Funkcja do przełączania trybu shuffle ---
 function toggleShuffle() {
   isShuffle = !isShuffle;
-  shuffleButton.textContent = isShuffle ? '🔀 (ON)' : '🔀';
-  shuffleButton.style.color = isShuffle ? '#3a86ff' : 'white';
+  shuffleButton.textContent = isShuffle ? '🔀 (ON)' : '🔀 (OFF)';
+  shuffleButton.style.color = isShuffle ? 'green' : 'red';
   saveSoundSettings();
 }
 
@@ -345,8 +426,8 @@ function loadSoundSettings() {
     
     // Wczytaj ustawienia shuffle
     isShuffle = soundSettings.isShuffle || false;
-    shuffleButton.textContent = isShuffle ? '🔀 (ON)' : '🔀';
-    shuffleButton.style.color = isShuffle ? '#3a86ff' : 'white';
+    shuffleButton.textContent = isShuffle ? '🔀 (ON)' : '🔀 (OFF)';
+    shuffleButton.style.color = isShuffle ? 'green' : 'red';
 
     backgroundMusic.src = playlist[currentTrackIndex].src;
     backgroundMusic.load();
@@ -366,11 +447,11 @@ function handleFirstInteraction() {
     if (firstClickOccurred) return;
     firstClickOccurred = true;
     
-    // Dodaj warunek sprawdzający flagę
-    if (musicEnabledFlag && isPlaying) {
+    if (musicEnabledFlag) {
         backgroundMusic.play()
             .then(() => {
                 playPauseBtn.textContent = '⏸';
+                isPlaying = true;
                 showNowPlayingNotification();
             })
             .catch(e => console.log("Błąd odtwarzania po kliknięciu:", e));
@@ -471,7 +552,8 @@ const achievements = [
   { id: 'ascensionMaster', name: 'Mistrz Wniebowstąpienia', description: 'Dokonaj pierwszego Wniebowstąpienia', condition: () => ascensionCount >= 1, unlocked: false },
   { id: 'heavenlyBaker', name: 'Niebiański Piekarz', description: 'Zdobądź 10 Niebiańskich Chipów', condition: () => heavenlyChips >= 10, unlocked: false },
   { id: 'divineBaker', name: 'Boski Piekarz', description: 'Zdobądź 100 Niebiańskich Chipów', condition: () => heavenlyChips >= 100, unlocked: false },
-  { id: 'celestialBaker', name: 'Niebiański Mistrz', description: 'Zdobądź 1000 Niebiańskich Chipów', condition: () => heavenlyChips >= 1000, unlocked: false }
+  { id: 'celestialBaker', name: 'Niebiański Mistrz', description: 'Zdobądź 1000 Niebiańskich Chipów', condition: () => heavenlyChips >= 1000, unlocked: false },
+  { id: 'promoUsed', name: 'Kod na start', description: 'Wykorzystaj kod promocyjny', condition: () => usedPromoCodes.length > 0, unlocked: false }
 ];
 
 // --- Wyświetlanie ulepszeń ---
@@ -1133,7 +1215,8 @@ function saveGame() {
     heavenlyUpgrades: heavenlyUpgrades.map(upg => ({ 
       id: upg.id, 
       purchased: upg.purchased 
-    }))
+    })),
+    usedPromoCodes: usedPromoCodes,
   };
   
   localStorage.setItem('cookieClickerSave', JSON.stringify(gameState));
@@ -1191,6 +1274,9 @@ function loadGame() {
       });
     }
 
+    usedPromoCodes = gameState.usedPromoCodes || [];
+    localStorage.setItem('cookieClickerUsedPromoCodes', JSON.stringify(usedPromoCodes));
+
     setBakeryName(gameState.bakeryName || generateRandomName());
     updateDisplay();
     renderUpgrades();
@@ -1200,6 +1286,7 @@ function loadGame() {
     updateLastSaveTimeDisplay();
     loadSoundSettings();
     initMusicPlayer();
+    initPromoCodes();
 
     return true;
   } catch (e) {
@@ -1318,6 +1405,11 @@ function resetGame() {
   heavenlyUpgrades.forEach(upgrade => {
     upgrade.purchased = false;
   });
+
+  // Reset kodów promocyjnych
+  usedPromoCodes = [];
+  localStorage.removeItem('cookieClickerUsedPromoCodes');
+  initPromoCodes();
   
   setBakeryName(generateRandomName());
   
@@ -1357,6 +1449,7 @@ setBakeryName(generateRandomName());
 loadSoundSettings();
 loadGame();
 initMusicPlayer(); 
+initPromoCodes();
 
 // Dodaj obsługę przycisku ascension
 document.getElementById('ascendBtn').addEventListener('click', ascend);
