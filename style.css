@@ -87,6 +87,58 @@ h1 {
     color: #b97800;
     text-shadow: 1px 1px 0 #fff1b5;
 }
+.buyAmountBtn {
+  background: linear-gradient(145deg, #e6b800, #c89200);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 4px 12px;
+  margin: 0 2px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px #996f00;
+  transition: background 0.2s;
+}
+.buyAmountBtn:hover {
+  background: linear-gradient(145deg, #ffd93b, #e6b800);
+}
+.buyAmountBtn.active {
+  background: linear-gradient(145deg, #ffd93b, #e6b800);
+  color: #5d3a00;
+  border: 2px solid #e6b800;
+}
+.sellAmountBtn {
+    background: linear-gradient(145deg, #ff5c5c, #cc0000);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 4px 12px;
+    margin: 0 2px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px #990000;
+    transition: background 0.2s;
+}
+.sellAmountBtn:hover {
+    background: linear-gradient(145deg, #ff7777, #cc0000);
+}
+.sellAmountBtn.active {
+    background: linear-gradient(145deg, #ff7777, #cc0000);
+    color: #5d3a00;
+    border: 2px solid #cc0000;
+}
+.sell-action-btn:hover {
+    background: linear-gradient(145deg, #ff7777, #cc0000) !important;
+}
+/* To musi być NA SAMYM KOŃCU, po wszystkich hover! */
+.sell-action-btn:disabled,
+.sell-action-btn:disabled:hover,
+button.sell-action-btn[disabled]:hover {
+    background: #bfbfbf !important;
+    color: #666 !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+}
 .upgrade-item {
     background: #fbe88f;
     border-radius: 12px;

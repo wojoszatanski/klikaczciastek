@@ -12,6 +12,8 @@ let musicEnabledFlag = true;
 let firstClickOccurred = false;
 let isResuming = false;
 let lastEventTime = 0;
+let buyAmount = 1;
+let sellAmount = 1;
 const MIN_EVENT_INTERVAL = 300000; // Minimalny interwał między eventami (5 minut)
 
 // --- Nowy licznik ciastek upieczonych w sesji ---
@@ -39,6 +41,65 @@ const heavenlyUpgrades = [
   { id: 'hc9', name: 'Eonowe Doświadczenie', description: '+50% do ciastek na sekundę na zawsze', cost: 5000, effect: { cpsMultiplier: 0.5 }, purchased: false },
   { id: 'hc10', name: 'Ostateczna Doskonałość', description: '+100% do ciastek na sekundę na zawsze', cost: 10000, effect: { cpsMultiplier: 1.0 }, purchased: false }
 ];
+
+document.querySelectorAll('.buyAmountBtn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    buyAmount = parseInt(this.dataset.amount, 10);
+    document.querySelectorAll('.buyAmountBtn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    // Dezaktywuj tryb sprzedaży
+    document.querySelectorAll('.sellAmountBtn').forEach(b => b.classList.remove('active'));
+    renderUpgrades();
+  });
+});
+// Ustaw domyślnie aktywny przycisk "1"
+document.querySelector('.buyAmountBtn[data-amount="1"]').classList.add('active');
+
+document.querySelectorAll('.sellAmountBtn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    sellAmount = this.dataset.amount === 'all' ? 'all' : parseInt(this.dataset.amount, 10);
+    document.querySelectorAll('.sellAmountBtn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    // Dezaktywuj tryb kupna
+    document.querySelectorAll('.buyAmountBtn').forEach(b => b.classList.remove('active'));
+    renderUpgrades();
+  });
+});
+
+// Funkcja sprzedaży ulepszenia
+function sellUpgrade(upgrade, type) {
+  let amountToSell = sellAmount === 'all' ? upgrade.count : Math.min(sellAmount, upgrade.count);
+  if (amountToSell <= 0) return;
+
+  // Oblicz sumę zwrotu (85% oryginalnej wartości kupna ostatnich N sztuk)
+  let refund = 0;
+  let tempCost = upgrade.cost;
+  // Cofamy się po cenach, by policzyć ile kosztowały ostatnie sztuki
+  for (let i = 0; i < amountToSell; i++) {
+    // Odwróć wzór kosztu, by uzyskać oryginalną cenę kupna tej sztuki
+    tempCost = type === 'production'
+      ? Math.floor(tempCost / 1.2)
+      : Math.floor(tempCost / 2.5);
+    // Oddajemy 85% oryginalnej ceny kupna tej sztuki
+    refund += Math.floor(tempCost * 0.85);
+  }
+
+  // Aktualizuj stan gry
+  upgrade.count -= amountToSell;
+  if (type === 'production') {
+    cps -= upgrade.cps * amountToSell;
+  } else if (type === 'click') {
+    clickValue -= upgrade.clickValue * amountToSell;
+  }
+  upgrade.cost = tempCost;
+  count += refund;
+
+  buySound.currentTime = 0;
+  buySound.play();
+  updateDisplay();
+  renderUpgrades();
+  checkAchievements();
+}
 
 // --- Kody promocyjne ---
 const promoCodes = [
@@ -70,7 +131,6 @@ document.getElementById('redeemPromoCode').addEventListener('click', function() 
     return;
   }
 
-  
   // Sprawdź czy kod został już wykorzystany
   if (usedPromoCodes.some(usedCode => usedCode === code)) {
     message.textContent = 'Ten kod został już wykorzystany.';
@@ -113,6 +173,13 @@ document.getElementById('redeemPromoCode').addEventListener('click', function() 
       message.textContent = '';
       message.style.minHeight = '0'; // Dodane: reset minimalnej wysokości
     }, 5000);
+  }
+});
+
+// Dodaj obsługę Entera w polu kodu promocyjnego
+document.getElementById('promoCodeInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    document.getElementById('redeemPromoCode').click();
   }
 });
 
@@ -638,43 +705,86 @@ function formatNumber(num) {
   return num.toFixed(1).replace(/\.0$/, '');
 }
 
+
 function createUpgradeItem(upgrade, container, type) {
   const div = document.createElement('div');
   div.className = 'upgrade-item';
   const span = document.createElement('span');
-  
+
   // Uwzględnij redukcję kosztów z ulepszeń prestiżowych
   const costReduction = getHeavenlyCostReduction();
-  const actualCost = Math.ceil(upgrade.cost * (1 - costReduction));
-  
-  if (type === 'production') {
-    span.textContent = `${upgrade.name} (x${upgrade.count}) - ${upgrade.cps.toFixed(1)} cps - koszt: ${formatNumber(actualCost)} ciastek`;
-  } else if (type === 'click') {
-    span.textContent = `${upgrade.name} (x${upgrade.count}) - +${upgrade.clickValue} za klik - koszt: ${formatNumber(actualCost)} ciastek`;
+
+  // Oblicz koszt zakupu/sprzedaży wielu sztuk (wzór na sumę geometryczną)
+  let totalCost = 0;
+  let tempCost = upgrade.cost;
+  for (let i = 0; i < buyAmount; i++) {
+    totalCost += Math.ceil(tempCost * (1 - costReduction));
+    tempCost = type === 'production'
+      ? Math.ceil(tempCost * 1.2)
+      : Math.ceil(tempCost * 2.5);
   }
-  
+
+  if (type === 'production') {
+    span.textContent = `${upgrade.name} (x${upgrade.count}) - ${upgrade.cps.toFixed(1)} cps - koszt: ${formatNumber(totalCost)} ciastek`;
+  } else if (type === 'click') {
+    span.textContent = `${upgrade.name} (x${upgrade.count}) - +${upgrade.clickValue} za klik - koszt: ${formatNumber(totalCost)} ciastek`;
+  }
+
   const btn = document.createElement('button');
-  btn.textContent = 'Kup';
-  btn.disabled = count < actualCost;
-  btn.addEventListener('click', () => {
-    if (count >= actualCost) {
-      count -= actualCost;
-      if(type === 'production') {
-        upgrade.count++;
-        cps += upgrade.cps;
-        upgrade.cost = Math.ceil(upgrade.cost * 1.2);
-      } else if(type === 'click') {
-        upgrade.count++;
-        clickValue += upgrade.clickValue;
-        upgrade.cost = Math.ceil(upgrade.cost * 2.5);
-      }
-      buySound.currentTime = 0;
-      buySound.play();
-      updateDisplay();
-      renderUpgrades();
-      checkAchievements();
+
+  // Tryb sprzedaży: aktywny tylko jeśli JEDEN z przycisków sprzedaży ma .active, a żaden z kupna nie ma .active
+  const isSellMode = document.querySelector('.sellAmountBtn.active') &&
+    !document.querySelector('.buyAmountBtn.active');
+
+  if (isSellMode) {
+    btn.textContent = sellAmount === 'all'
+      ? 'Sprzedaj wszystko'
+      : `Sprzedaj x${sellAmount}`;
+    btn.classList.add('sell-action-btn');
+    btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
+    btn.style.boxShadow = '0 2px #990000';
+    btn.disabled = upgrade.count === 0;
+    if (upgrade.count === 0) {
+      btn.style.background = '#bfbfbf';
+      btn.style.color = '#666';
+      btn.style.boxShadow = 'none';
+      btn.style.cursor = 'not-allowed';
     }
-  });
+    btn.addEventListener('click', () => sellUpgrade(upgrade, type));
+  } else {
+    btn.textContent = `Kup x${buyAmount}`;
+    btn.disabled = count < totalCost;
+    if (count < totalCost) {
+      btn.style.background = '#bfbfbf';
+      btn.style.color = '#666';
+      btn.style.boxShadow = 'none';
+      btn.style.cursor = 'not-allowed';
+    }
+    btn.addEventListener('click', () => {
+      if (count >= totalCost) {
+        count -= totalCost;
+        if(type === 'production') {
+          for(let i=0; i<buyAmount; i++) {
+            upgrade.count++;
+            cps += upgrade.cps;
+            upgrade.cost = Math.ceil(upgrade.cost * 1.2);
+          }
+        } else if(type === 'click') {
+          for(let i=0; i<buyAmount; i++) {
+            upgrade.count++;
+            clickValue += upgrade.clickValue;
+            upgrade.cost = Math.ceil(upgrade.cost * 2.5);
+          }
+        }
+        buySound.currentTime = 0;
+        buySound.play();
+        updateDisplay();
+        renderUpgrades();
+        checkAchievements();
+      }
+    });
+  }
+
   div.appendChild(span);
   div.appendChild(btn);
   container.appendChild(div);
@@ -1208,10 +1318,24 @@ const settingsToggle = document.getElementById('settingsToggle');
 settingsToggle.addEventListener('click', () => {
   const isVisible = settingsMenu.style.display === 'block';
   settingsMenu.style.display = isVisible ? 'none' : 'block';
+  // Jeśli zamykamy menu przez kliknięcie w przycisk ustawień, wyczyść input i komunikat
+  if (isVisible) {
+    document.getElementById('promoCodeInput').value = '';
+    document.getElementById('promoCodeMessage').textContent = '';
+  }
 });
 
 document.getElementById('closeSettings').addEventListener('click', function() {
   document.getElementById('settingsMenu').style.display = 'none';
+  // Wyczyść pole kodu promocyjnego po zamknięciu menu
+  document.getElementById('promoCodeInput').value = '';
+  document.getElementById('promoCodeMessage').textContent = '';
+});
+
+// Po odświeżeniu strony input też jest pusty
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('promoCodeInput').value = '';
+  document.getElementById('promoCodeMessage').textContent = '';
 });
 
 function saveGame() {
