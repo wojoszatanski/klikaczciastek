@@ -167,6 +167,7 @@ const playlist = [
 let currentTrackIndex = 0;
 let isShuffle = false;
 let isPlaying = false;
+let trackChangedDuringPause = false;
 
 // --- Referencje do elementów kontroli muzyki ---
 const currentTrackEl = document.getElementById('currentTrack');
@@ -208,6 +209,7 @@ function playCurrentTrack() {
   
   updateTrackDisplay();
   saveSoundSettings();
+  trackChangedDuringPause = false;
 }
 
 function updateTrackDisplay() {
@@ -238,7 +240,10 @@ function togglePlayPause() {
                 .then(() => {
                     playPauseBtn.textContent = '⏸';
                     isPlaying = true;
-                    if (!isResuming) showNowPlayingNotification();
+                    if (trackChangedDuringPause || !isResuming) {
+                        showNowPlayingNotification();
+                        trackChangedDuringPause = false; // Resetuj flagę
+                    }
                     isResuming = false;
                 })
                 .catch(e => {
@@ -263,7 +268,8 @@ function toggleShuffle() {
 function playNextTrack() {
   // Zapamiętaj czy muzyka była odtwarzana przed zmianą
   const wasPlaying = isPlaying;
-  
+  trackChangedDuringPause = !wasPlaying; // Ustaw flagę jeśli zmiana podczas pauzy
+
   if (isShuffle) {
     let newIndex;
     do {
@@ -293,7 +299,9 @@ function playNextTrack() {
 function playPrevTrack() {
   // Zapamiętaj czy muzyka była odtwarzana przed zmianą
   const wasPlaying = isPlaying;
-  
+  trackChangedDuringPause = !wasPlaying; // Ustaw flagę jeśli zmiana podczas pauzy
+
+
   if (isShuffle) {
     let newIndex;
     do {
@@ -808,6 +816,10 @@ function ascend() {
     behavior: 'smooth'
   });
 
+  // --- Ścisz muzykę na czas animacji ---
+  const previousVolume = backgroundMusic.volume;
+  backgroundMusic.volume = 0;
+
   heavenlyChips += hcGained;
   heavenlyChipsThisAscension = hcGained;
   ascensionCount++;
@@ -828,6 +840,8 @@ function ascend() {
   // Usuwamy overlay po 5 sekundach
   setTimeout(() => {
     overlay.remove();
+    backgroundMusic.volume = previousVolume;
+    saveSoundSettings();
   }, 5000);
 }
 
@@ -1076,6 +1090,10 @@ function showEvent(message, type, duration) {
   // Dodajemy odpowiednią klasę w zależności od typu
   if (type === 'achievement') {
     eventBox.classList.add('achievement-type');
+    // Ukryj eventBox po 5 sekundach
+    setTimeout(() => {
+      hideEvent();
+    }, 5000);
   } else if (type === 'ascension') {
     eventBox.classList.add('ascension-type');
   } else {
@@ -1313,7 +1331,7 @@ document.getElementById('exportProgress').addEventListener('click', () => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `cookie_clicker_save_${new Date().toISOString().slice(0,10)}.txt`;
+  a.download = `klikacz_ciastek_zapis_${new Date().toISOString().slice(0,10)}.txt`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1338,6 +1356,8 @@ document.getElementById('importFile').addEventListener('change', function(e) {
       }
       localStorage.setItem('cookieClickerSave', JSON.stringify(gameState));
       loadGame();
+      // Zamknij menu ustawień po imporcie gry
+      settingsMenu.style.display = 'none';
       alert('Postęp został pomyślnie zaimportowany!');
     } catch (error) {
       alert(`Błąd wczytywania pliku: ${error.message}.`);
@@ -1421,6 +1441,8 @@ function resetGame() {
   renderHeavenlyUpgrades();
   updateHeavenlyChipsDisplay();
   updateLastSaveTimeDisplay();
+
+  settingsMenu.style.display = 'none';
 
   alert('Gra została zresetowana! Możesz zacząć od nowa.');
 }

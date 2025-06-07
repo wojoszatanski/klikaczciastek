@@ -610,7 +610,6 @@ input[type=range]::-ms-thumb {
 #promoCodeMessage:empty {
   min-height: 0 !important; /* Ukryj gdy puste */
 }
-
 @media (max-width: 480px) {
   #settingsMenu {
     top: 0;
