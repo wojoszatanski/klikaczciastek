@@ -662,65 +662,63 @@ input[type=range]::-ms-thumb {
 #promoCodeMessage:empty {
   min-height: 0 !important; /* Ukryj gdy puste */
 }
+@media (max-height: 920px) {
+  #settingsMenu {
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
 @media (max-width: 480px) {
   #settingsMenu {
     top: 0;
     left: 0;
     transform: none;
-    height: 100%;
+    height: 100vh;
+    max-height: 100vh;
     max-width: none;
-    max-height: none;
     border-radius: 0;
     border: none;
     padding: 15px;
-        overflow-y: auto; /* Dodaj przewijanie w pionie */
-    -webkit-overflow-scrolling: touch; /* Płynne przewijanie na iOS */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
   }
-  
   #closeSettings {
     font-size: 32px;
     top: 10px;
     right: 10px;
   }
-  
   #settingsMenu h2 {
     font-size: 1.5em;
     padding-top: 20px;
   }
-  
   #settingsMenu h3 {
     font-size: 1.2em;
     margin-top: 15px;
   }
-  
   #settingsMenu button, 
   #settingsMenu input[type="text"] {
     font-size: 16px;
     padding: 12px;
   }
-  
   #volumeSection {
     margin-top: 15px;
   }
-  
   #musicControls button {
     height: 45px;
     font-size: 18px;
   }
-  
   #albumCover {
     width: 120px;
     height: 120px;
   }
-  
   #promoCodesSection {
     margin-top: 15px;
   }
-  
   #saveSection {
     margin-top: 20px;
   }
-  
   #promoCodeInput {
     padding: 10px;
   }

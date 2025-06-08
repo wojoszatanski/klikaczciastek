@@ -266,17 +266,17 @@ function playCurrentTrack() {
   // Jeśli muzyka powinna być odtwarzana, spróbuj włączyć
   if (isPlaying) {
     backgroundMusic.play()
-      .then(() => {
-        playPauseBtn.textContent = '⏸';
-        if (!isResuming) showNowPlayingNotification();
-        isResuming = false;
-      })
+    .then(() => {
+      playPauseBtn.textContent = '⏸';
+      if (!isResuming || trackChangedDuringPause) showNowPlayingNotification();
+      isResuming = false;
+      trackChangedDuringPause = false; // resetuj flagę po pokazaniu
+    })
       .catch(e => console.log("Błąd odtwarzania w playCurrentTrack:", e));
   }
   
   updateTrackDisplay();
   saveSoundSettings();
-  trackChangedDuringPause = false;
 }
 
 function updateTrackDisplay() {
@@ -303,16 +303,16 @@ function togglePlayPause() {
         if (!firstClickOccurred) {
             handleFirstInteraction();
         } else {
-            backgroundMusic.play()
-                .then(() => {
-                    playPauseBtn.textContent = '⏸';
-                    isPlaying = true;
-                    if (trackChangedDuringPause || !isResuming) {
-                        showNowPlayingNotification();
-                        trackChangedDuringPause = false; // Resetuj flagę
-                    }
-                    isResuming = false;
-                })
+backgroundMusic.play()
+  .then(() => {
+    playPauseBtn.textContent = '⏸';
+    isPlaying = true;
+    if (trackChangedDuringPause || !isResuming) {
+      showNowPlayingNotification();
+    }
+    trackChangedDuringPause = false; // <-- przenieś tutaj
+    isResuming = false;
+  })
                 .catch(e => {
                     console.log("Błąd odtwarzania:", e);
                     playPauseBtn.textContent = '⏯';
@@ -335,7 +335,7 @@ function toggleShuffle() {
 function playNextTrack() {
   // Zapamiętaj czy muzyka była odtwarzana przed zmianą
   const wasPlaying = isPlaying;
-  trackChangedDuringPause = !wasPlaying; // Ustaw flagę jeśli zmiana podczas pauzy
+  if (!wasPlaying) trackChangedDuringPause = true; // <-- dodaj to
 
   if (isShuffle) {
     let newIndex;
@@ -366,8 +366,7 @@ function playNextTrack() {
 function playPrevTrack() {
   // Zapamiętaj czy muzyka była odtwarzana przed zmianą
   const wasPlaying = isPlaying;
-  trackChangedDuringPause = !wasPlaying; // Ustaw flagę jeśli zmiana podczas pauzy
-
+  if (!wasPlaying) trackChangedDuringPause = true; // <-- dodaj to
 
   if (isShuffle) {
     let newIndex;
@@ -714,27 +713,50 @@ function createUpgradeItem(upgrade, container, type) {
   // Uwzględnij redukcję kosztów z ulepszeń prestiżowych
   const costReduction = getHeavenlyCostReduction();
 
-  // Oblicz koszt zakupu/sprzedaży wielu sztuk (wzór na sumę geometryczną)
-  let totalCost = 0;
-  let tempCost = upgrade.cost;
-  for (let i = 0; i < buyAmount; i++) {
-    totalCost += Math.ceil(tempCost * (1 - costReduction));
-    tempCost = type === 'production'
-      ? Math.ceil(tempCost * 1.2)
-      : Math.ceil(tempCost * 2.5);
-  }
-
-  if (type === 'production') {
-    span.textContent = `${upgrade.name} (x${upgrade.count}) - ${upgrade.cps.toFixed(1)} cps - koszt: ${formatNumber(totalCost)} ciastek`;
-  } else if (type === 'click') {
-    span.textContent = `${upgrade.name} (x${upgrade.count}) - +${upgrade.clickValue} za klik - koszt: ${formatNumber(totalCost)} ciastek`;
-  }
-
-  const btn = document.createElement('button');
-
   // Tryb sprzedaży: aktywny tylko jeśli JEDEN z przycisków sprzedaży ma .active, a żaden z kupna nie ma .active
   const isSellMode = document.querySelector('.sellAmountBtn.active') &&
     !document.querySelector('.buyAmountBtn.active');
+
+  let totalCost = 0;
+  let tempCost = upgrade.cost;
+  let refund = 0;
+  let amountToSell = sellAmount === 'all' ? upgrade.count : Math.min(sellAmount, upgrade.count);
+
+  if (isSellMode) {
+    // Oblicz sumę zwrotu (85% oryginalnej wartości kupna ostatnich N sztuk)
+    tempCost = upgrade.cost;
+    for (let i = 0; i < amountToSell; i++) {
+      tempCost = type === 'production'
+        ? Math.floor(tempCost / 1.2)
+        : Math.floor(tempCost / 2.5);
+      refund += Math.floor(tempCost * 0.85);
+    }
+  } else {
+    // Oblicz koszt zakupu wielu sztuk (wzór na sumę geometryczną)
+    tempCost = upgrade.cost;
+    for (let i = 0; i < buyAmount; i++) {
+      totalCost += Math.ceil(tempCost * (1 - costReduction));
+      tempCost = type === 'production'
+        ? Math.ceil(tempCost * 1.2)
+        : Math.ceil(tempCost * 2.5);
+    }
+  }
+
+  if (type === 'production') {
+    if (isSellMode) {
+      span.textContent = `${upgrade.name} (x${upgrade.count}) - ${upgrade.cps.toFixed(1)} cps - sprzedaj za: ${formatNumber(refund)} ciastek`;
+    } else {
+      span.textContent = `${upgrade.name} (x${upgrade.count}) - ${upgrade.cps.toFixed(1)} cps - koszt: ${formatNumber(totalCost)} ciastek`;
+    }
+  } else if (type === 'click') {
+    if (isSellMode) {
+      span.textContent = `${upgrade.name} (x${upgrade.count}) - +${upgrade.clickValue} za klik - sprzedaj za: ${formatNumber(refund)} ciastek`;
+    } else {
+      span.textContent = `${upgrade.name} (x${upgrade.count}) - +${upgrade.clickValue} za klik - koszt: ${formatNumber(totalCost)} ciastek`;
+    }
+  }
+
+  const btn = document.createElement('button');
 
   if (isSellMode) {
     btn.textContent = sellAmount === 'all'
@@ -744,7 +766,7 @@ function createUpgradeItem(upgrade, container, type) {
     btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
     btn.style.boxShadow = '0 2px #990000';
     btn.disabled = upgrade.count === 0;
-    if (upgrade.count === 0) {
+    if (upgrade.count < 0) {
       btn.style.background = '#bfbfbf';
       btn.style.color = '#666';
       btn.style.boxShadow = 'none';
@@ -1109,23 +1131,89 @@ function formatPlayTime(seconds) {
 
 function updateButtons() {
   const costReduction = getHeavenlyCostReduction();
-  
+  const isSellMode = document.querySelector('.sellAmountBtn.active') &&
+    !document.querySelector('.buyAmountBtn.active');
+
   upgrades.forEach(upg => {
     const buttons = upgradesDiv.querySelectorAll('button');
     buttons.forEach(btn => {
       if(btn.previousSibling.textContent.includes(upg.name)) {
-        const actualCost = Math.ceil(upg.cost * (1 - costReduction));
-        btn.disabled = count < actualCost;
+        if (isSellMode) {
+          // Tryb sprzedaży: aktywuj jeśli można sprzedać
+          btn.disabled = upg.count === 0;
+          if (upg.count === 0) {
+            btn.style.background = '#bfbfbf';
+            btn.style.color = '#666';
+            btn.style.boxShadow = 'none';
+            btn.style.cursor = 'not-allowed';
+          } else {
+            btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
+            btn.style.color = '';
+            btn.style.boxShadow = '0 2px #990000';
+            btn.style.cursor = 'pointer';
+          }
+        } else {
+          // Tryb kupna: dezaktywuj jeśli nie stać
+          let totalCost = 0;
+          let tempCost = upg.cost;
+          for (let i = 0; i < buyAmount; i++) {
+            totalCost += Math.ceil(tempCost * (1 - costReduction));
+            tempCost = Math.ceil(tempCost * 1.2);
+          }
+          btn.disabled = count < totalCost;
+          if (count < totalCost) {
+            btn.style.background = '#bfbfbf';
+            btn.style.color = '#666';
+            btn.style.boxShadow = 'none';
+            btn.style.cursor = 'not-allowed';
+          } else {
+            btn.style.background = '';
+            btn.style.color = '';
+            btn.style.boxShadow = '';
+            btn.style.cursor = '';
+          }
+        }
       }
     });
   });
-  
+
   cursorUpgrades.forEach(upg => {
     const buttons = cursorUpgradesDiv.querySelectorAll('button');
     buttons.forEach(btn => {
       if(btn.previousSibling.textContent.includes(upg.name)) {
-        const actualCost = Math.ceil(upg.cost * (1 - costReduction));
-        btn.disabled = count < actualCost;
+        if (isSellMode) {
+          btn.disabled = upg.count === 0;
+          if (upg.count === 0) {
+            btn.style.background = '#bfbfbf';
+            btn.style.color = '#666';
+            btn.style.boxShadow = 'none';
+            btn.style.cursor = 'not-allowed';
+          } else {
+            btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
+            btn.style.color = '';
+            btn.style.boxShadow = '0 2px #990000';
+            btn.style.cursor = 'pointer';
+          }
+        } else {
+          let totalCost = 0;
+          let tempCost = upg.cost;
+          for (let i = 0; i < buyAmount; i++) {
+            totalCost += Math.ceil(tempCost * (1 - costReduction));
+            tempCost = Math.ceil(tempCost * 2.5);
+          }
+          btn.disabled = count < totalCost;
+          if (count < totalCost) {
+            btn.style.background = '#bfbfbf';
+            btn.style.color = '#666';
+            btn.style.boxShadow = 'none';
+            btn.style.cursor = 'not-allowed';
+          } else {
+            btn.style.background = '';
+            btn.style.color = '';
+            btn.style.boxShadow = '';
+            btn.style.cursor = '';
+          }
+        }
       }
     });
   });
@@ -1180,8 +1268,7 @@ function startRandomEvent() {
     
     // Dodaj informację o czasie trwania eventu
     const eventDuration = 30000;
-    showEvent(`Wydarzenie: Podwójne ciastka przez ${eventDuration/1000} sekund!`, 'event');
-    
+    showEvent(`Wydarzenie: Podwójne ciastka przez ${eventDuration/1000} sekund!`, 'event', eventDuration);    
     setTimeout(() => {
       eventMultiplier = 1;
       eventActive = false;
@@ -1214,7 +1301,6 @@ function showEvent(message, type, duration) {
       const timer = document.createElement('div');
       timer.id = 'eventTimer';
       timer.style.marginTop = '5px';
-      timer.style.fontSize = '0.8em';
       eventBox.appendChild(timer);
       
       // Aktualizuj licznik co sekundę
@@ -1225,8 +1311,6 @@ function showEvent(message, type, duration) {
         
         if (duration > 0) {
           setTimeout(updateTimer, 1000);
-        } else {
-          timer.remove();
         }
       };
       
