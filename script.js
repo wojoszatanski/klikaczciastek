@@ -50,6 +50,11 @@ document.querySelectorAll('.buyAmountBtn').forEach(btn => {
     // Dezaktywuj tryb sprzedaży
     document.querySelectorAll('.sellAmountBtn').forEach(b => b.classList.remove('active'));
     renderUpgrades();
+    // --- ZAPISZ TRYB I ILOŚĆ ---
+    localStorage.setItem('cookieClickerBuySellMode', JSON.stringify({
+      mode: 'buy',
+      amount: buyAmount
+    }));
   });
 });
 // Ustaw domyślnie aktywny przycisk "1"
@@ -63,6 +68,11 @@ document.querySelectorAll('.sellAmountBtn').forEach(btn => {
     // Dezaktywuj tryb kupna
     document.querySelectorAll('.buyAmountBtn').forEach(b => b.classList.remove('active'));
     renderUpgrades();
+    // --- ZAPISZ TRYB I ILOŚĆ ---
+    localStorage.setItem('cookieClickerBuySellMode', JSON.stringify({
+      mode: 'sell',
+      amount: sellAmount
+    }));
   });
 });
 
@@ -1268,7 +1278,7 @@ function startRandomEvent() {
     
     // Dodaj informację o czasie trwania eventu
     const eventDuration = 30000;
-    showEvent(`Wydarzenie: Podwójne ciastka przez ${eventDuration/1000} sekund!`, 'event', eventDuration);    
+    showEvent(`Wydarzenie: Podwójne ciastka!`, 'event', eventDuration);    
     setTimeout(() => {
       eventMultiplier = 1;
       eventActive = false;
@@ -1417,9 +1427,43 @@ document.getElementById('closeSettings').addEventListener('click', function() {
 });
 
 // Po odświeżeniu strony input też jest pusty
+// ...istniejący kod...
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('promoCodeInput').value = '';
   document.getElementById('promoCodeMessage').textContent = '';
+
+  // --- ODCZYTAJ TRYB KUPNA/SPRZEDAŻY I ILOŚĆ ---
+  const savedMode = JSON.parse(localStorage.getItem('cookieClickerBuySellMode') || '{}');
+  if (savedMode.mode === 'buy') {
+    buyAmount = savedMode.amount || 1;
+    document.querySelectorAll('.buyAmountBtn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.amount, 10) === buyAmount);
+    });
+    document.querySelectorAll('.sellAmountBtn').forEach(b => b.classList.remove('active'));
+  } else if (savedMode.mode === 'sell') {
+    if (savedMode.amount === 'all') {
+      sellAmount = 'all';
+    } else {
+      sellAmount = parseInt(savedMode.amount, 10) || 1;
+    }
+    document.querySelectorAll('.sellAmountBtn').forEach(b => {
+      if (savedMode.amount === 'all') {
+        b.classList.toggle('active', b.dataset.amount === 'all');
+      } else {
+        b.classList.toggle('active', parseInt(b.dataset.amount, 10) === sellAmount);
+      }
+    });
+    document.querySelectorAll('.buyAmountBtn').forEach(b => b.classList.remove('active'));
+    // Upewnij się, że buyAmount jest zresetowany
+    buyAmount = 1;
+  } else {
+    // Domyślnie tryb kupna x1
+    buyAmount = 1;
+    sellAmount = 1;
+    document.querySelector('.buyAmountBtn[data-amount="1"]').classList.add('active');
+    document.querySelectorAll('.sellAmountBtn').forEach(b => b.classList.remove('active'));
+  }
+  renderUpgrades();
 });
 
 function saveGame() {
@@ -1611,6 +1655,18 @@ function resetGame() {
   ascensionCount = 0;
   cookieCounter = 0;
 
+  buyAmount = 1;
+  sellAmount = 1;
+  localStorage.setItem('cookieClickerBuySellMode', JSON.stringify({
+    mode: 'buy',
+    amount: 1
+  }));
+
+  document.querySelectorAll('.buyAmountBtn').forEach(b => {
+    b.classList.toggle('active', b.dataset.amount === '1');
+  });
+  document.querySelectorAll('.sellAmountBtn').forEach(b => b.classList.remove('active'));
+
   [clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound].forEach(sound => {
     sound.currentTime = 0;
     sound.muted = false;
@@ -1671,7 +1727,6 @@ setInterval(() => {
 }, 1000);
 
 // --- Inicjalizacja ---
-renderUpgrades();
 renderHeavenlyUpgrades();
 updateDisplay();
 renderAchievements();
