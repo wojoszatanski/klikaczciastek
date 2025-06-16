@@ -523,8 +523,16 @@ function loadSoundSettings() {
     updateTrackDisplay();
     
   } else {
+    // --- DOMYŚLNE USTAWIENIA PRZY PIERWSZYM URUCHOMIENIU ---
+    isShuffle = false;
+    shuffleButton.textContent = '🔀 (OFF)';
+    shuffleButton.style.color = 'red';
+    isPlaying = false;
+    musicEnabledFlag = true;
     playPauseBtn.textContent = '⏯';
-    shuffleButton.textContent = '🔀';
+    backgroundMusic.src = playlist[0].src;
+    backgroundMusic.load();
+    updateTrackDisplay();
   }
 }
 
@@ -1040,9 +1048,18 @@ function addCookiesPerSecond() {
   cookiesBakedThisAscension += amount;
 
   accumulatedCookies += amount;
+  
+  // Oblicz liczbę całkowitych ciastek do animacji
   const wholeCookies = Math.floor(accumulatedCookies);
+  
   if (wholeCookies >= 1) {
-    createAutoCookieAnimation(Math.min(wholeCookies, 100));
+    // Ogranicz liczbę animowanych ciastek do maksymalnie 50
+    const cookiesToAnimate = Math.min(wholeCookies, 50);
+    
+    // Stwórz animację tylko dla ograniczonej liczby ciastek
+    createAutoCookieAnimation(cookiesToAnimate);
+    
+    // Zaktualizuj skumulowaną wartość o rzeczywistą liczbę ciastek
     accumulatedCookies -= wholeCookies;
   }
 
@@ -1056,6 +1073,9 @@ function createAutoCookieAnimation(numCookies) {
   
   const centerX = cookieBtn.offsetLeft + cookieBtn.offsetWidth / 2;
   const centerY = cookieBtn.offsetTop + cookieBtn.offsetHeight / 2;
+
+  // Ogranicz do maksymalnie 50 animacji na raz
+  const actualNum = Math.min(numCookies, 50);
 
   for (let i = 0; i < numCookies; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -1079,6 +1099,8 @@ function createAutoCookieAnimation(numCookies) {
     cookieCounter++; // Zwiększ licznik po każdym ciastku
 
     offsetParent.appendChild(cookie);
+
+    cookie.offsetWidth;
 
     requestAnimationFrame(() => {
       cookie.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.5)`;
