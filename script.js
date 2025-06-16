@@ -216,6 +216,8 @@ const effectsMuteButton = document.getElementById('effectsMuteButton');
 const effectsVolumeControl = document.getElementById('effectsVolumeControl');
 const buyHeavenlySound = document.getElementById('buyHeavenlySound');
 const ascendSound = document.getElementById('ascendSound');
+const settingsOnSound = document.getElementById('settingsOnSound');
+const settingsOffSound = document.getElementById('settingsOffSound');
 const backgroundMusic = document.getElementById('backgroundMusic');
 const shuffleButton = document.getElementById('shuffleButton');
 
@@ -439,7 +441,7 @@ volumeControl.addEventListener('input', () => {
 // Obsługa zmian głośności efektów
 effectsVolumeControl.addEventListener('input', () => {
   const volume = effectsVolumeControl.value;
-  [clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound].forEach(sound => {
+  [clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound, settingsOnSound, settingsOffSound].forEach(sound => {
     sound.volume = volume;
   });
   saveSoundSettings();
@@ -448,7 +450,7 @@ effectsVolumeControl.addEventListener('input', () => {
 // --- Obsługa wyciszenia efektów ---
 effectsMuteButton.addEventListener('click', () => {
   const isMuted = clickSound.muted;
-  [clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound].forEach(sound => {
+  [clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound, settingsOnSound, settingsOffSound].forEach(sound => {
     sound.muted = !isMuted;
   });
   effectsMuteButton.textContent = isMuted ? 'Wycisz efekty' : 'Odcisz efekty';
@@ -456,7 +458,7 @@ effectsMuteButton.addEventListener('click', () => {
 });
 
 // --- Inicjalizacja stanu przycisku ---
-[clickSound, buySound, achievementSound, eventSound].forEach(sound => {
+[clickSound, buySound, achievementSound, eventSound, buyHeavenlySound, ascendSound, settingsOnSound, settingsOffSound].forEach(sound => {
   sound.muted = false;
 });
 effectsMuteButton.textContent = 'Wycisz efekty';
@@ -1235,9 +1237,14 @@ function createFlyingCookie(x, y, baseValue) {
   span.className = 'flying-cookie';
   const scrollX = window.scrollX || window.pageXOffset;
   const scrollY = window.scrollY || window.pageYOffset;
-  
+
+  let marginTop = 0;
+  if (window.innerWidth <= 480) {
+    marginTop = 75;
+  }
+
   span.style.left = `${x + scrollX - 20}px`;
-  span.style.top = `${y + scrollY - 20}px`;
+  span.style.top = `${y + scrollY - 20 - marginTop}px`;
   
   // Uwzględnij mnożnik eventu
   const displayValue = baseValue * eventMultiplier;
@@ -1416,6 +1423,13 @@ settingsToggle.addEventListener('click', () => {
   if (isVisible) {
     document.getElementById('promoCodeInput').value = '';
     document.getElementById('promoCodeMessage').textContent = '';
+    // Dźwięk zamykania ustawień
+    settingsOffSound.currentTime = 0;
+    settingsOffSound.play();
+  } else {
+    // Dźwięk otwierania ustawień
+    settingsOnSound.currentTime = 0;
+    settingsOnSound.play();
   }
 });
 
@@ -1424,6 +1438,9 @@ document.getElementById('closeSettings').addEventListener('click', function() {
   // Wyczyść pole kodu promocyjnego po zamknięciu menu
   document.getElementById('promoCodeInput').value = '';
   document.getElementById('promoCodeMessage').textContent = '';
+  // Dźwięk zamykania ustawień
+  settingsOffSound.currentTime = 0;
+  settingsOffSound.play();
 });
 
 // Po odświeżeniu strony input też jest pusty
@@ -1575,11 +1592,35 @@ function updateLastSaveTimeDisplay() {
   }
 }
 
-// Funkcje eksportu/importu
+// --- SZYFROWANIE XOR + BASE64 ---
+const SAVE_KEY = "ciasteczko2024";
+
+function xorEncrypt(str, key) {
+  let result = '';
+  for (let i = 0; i < str.length; i++) {
+    result += String.fromCharCode(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return result;
+}
+function encodeBase64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function decodeBase64(str) {
+  return decodeURIComponent(escape(atob(str)));
+}
+function encryptSave(jsonStr) {
+  return encodeBase64(xorEncrypt(jsonStr, SAVE_KEY));
+}
+function decryptSave(encStr) {
+  return xorEncrypt(decodeBase64(encStr), SAVE_KEY);
+}
+
+// --- EKSPORT ZASZYFROWANY ---
 document.getElementById('exportProgress').addEventListener('click', () => {
   const gameState = JSON.parse(localStorage.getItem('cookieClickerSave') || '{}');
   const dataStr = JSON.stringify(gameState, null, 2);
-  const blob = new Blob([dataStr], { type: 'text/plain' });
+  const encrypted = encryptSave(dataStr);
+  const blob = new Blob([encrypted], { type: 'text/plain' });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -1590,30 +1631,43 @@ document.getElementById('exportProgress').addEventListener('click', () => {
   window.URL.revokeObjectURL(url);
 });
 
-document.getElementById('importProgress').addEventListener('click', () => {
+document.getElementById('importProgress').addEventListener('click', function() {
   document.getElementById('importFile').click();
 });
 
+// --- IMPORT Z ODSZYFROWANIEM I KOMPATYBILNOŚCIĄ ---
 document.getElementById('importFile').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = (event) => {
+    let imported = event.target.result;
+    let gameState = null;
+    let isDecrypted = false;
     try {
-      const gameState = JSON.parse(event.target.result);
-      if (typeof gameState.count !== 'number' || 
-          !Array.isArray(gameState.upgrades)) {
-        throw new Error('nieprawidłowy format pliku');
+      // Najpierw spróbuj odszyfrować
+      const decrypted = decryptSave(imported);
+      gameState = JSON.parse(decrypted);
+      isDecrypted = true;
+    } catch (e) {
+      // Jeśli nie udało się odszyfrować, spróbuj jako zwykły JSON (stary format)
+      try {
+        gameState = JSON.parse(imported);
+      } catch (err) {
+        alert('Błąd wczytywania pliku: nieprawidłowy format lub uszkodzony plik.');
+        return;
       }
-      localStorage.setItem('cookieClickerSave', JSON.stringify(gameState));
-      loadGame();
-      // Zamknij menu ustawień po imporcie gry
-      settingsMenu.style.display = 'none';
-      alert('Postęp został pomyślnie zaimportowany!');
-    } catch (error) {
-      alert(`Błąd wczytywania pliku: ${error.message}.`);
     }
+    // Walidacja
+    if (typeof gameState.count !== 'number' || !Array.isArray(gameState.upgrades)) {
+      alert('Błąd wczytywania pliku: nieprawidłowy format pliku.');
+      return;
+    }
+    localStorage.setItem('cookieClickerSave', JSON.stringify(gameState));
+    loadGame();
+    settingsMenu.style.display = 'none';
+    alert(isDecrypted ? 'Postęp został pomyślnie zaimportowany!' : 'Postęp został pomyślnie zaimportowany (stary format zapisu, nowy zapis będzie używać nowego formatu)!');
   };
   reader.readAsText(file);
 });
