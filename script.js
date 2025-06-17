@@ -1068,14 +1068,12 @@ function addCookiesPerSecond() {
 }
 
 function createAutoCookieAnimation(numCookies) {
-  const buttonRect = cookieBtn.getBoundingClientRect();
-  const offsetParent = cookieBtn.offsetParent;
-  
-  const centerX = cookieBtn.offsetLeft + cookieBtn.offsetWidth / 2;
-  const centerY = cookieBtn.offsetTop + cookieBtn.offsetHeight / 2;
+  const btnRect = cookieBtn.getBoundingClientRect();
+  const bodyRect = document.body.getBoundingClientRect();
 
-  // Ogranicz do maksymalnie 50 animacji na raz
-  const actualNum = Math.min(numCookies, 50);
+  // Pozycja środka przycisku względem body
+  const centerX = btnRect.left - bodyRect.left + btnRect.width / 2;
+  const centerY = btnRect.top - bodyRect.top + btnRect.height / 2;
 
   for (let i = 0; i < numCookies; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -1086,19 +1084,17 @@ function createAutoCookieAnimation(numCookies) {
     const cookie = document.createElement('div');
     cookie.className = 'auto-cookie';
     cookie.style.position = 'absolute';
-    cookie.style.left = `${centerX}px`;
-    cookie.style.top = `${centerY}px`;
+    cookie.style.left = `${centerX - 8}px`; // -8px bo font-size: 16px
+    cookie.style.top = `${centerY - 8}px`;
     cookie.textContent = '🍪';
-    
-    // Tylko co drugie ciastko będzie niebieskie podczas eventu
+
     if (eventMultiplier > 1 && cookieCounter % 2 === 0) {
       cookie.style.filter = "invert(44%) sepia(37%) saturate(1117%) hue-rotate(181deg) brightness(104%) contrast(109%)";
       cookie.style.opacity = "0.5";
     }
 
-    cookieCounter++; // Zwiększ licznik po każdym ciastku
-
-    offsetParent.appendChild(cookie);
+    cookieCounter++;
+    document.body.appendChild(cookie);
 
     cookie.offsetWidth;
 
