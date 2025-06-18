@@ -21,7 +21,9 @@
       <div id="nowPlayingTrack">[brak]</div>
     </div>
   </div>
-  <button id="settingsToggle" title="Ustawienia" style="position: fixed; top: 15px; right: 15px; z-index: 3000; border: none; font-size: 28px; color: white; cursor: pointer; text-shadow: 0 0 3px black;">⚙️</button>
+  <button id="settingsToggle" title="Ustawienia" style="position: fixed; top: 15px; right: 15px; z-index: 3000; border: none; cursor: pointer;">
+    <img src="settings.png" alt="Ustawienia" style="width:32px;height:32px;">
+  </button>
   <audio id="backgroundMusic"></audio>
   <audio id="clickSound" src="click.mp3"></audio>
   <audio id="buySound" src="buy.mp3"></audio>
@@ -33,7 +35,9 @@
   <audio id="settingsOffSound" src="settingsOff.mp3"></audio> 
   <h1>Klikacz Ciastek</h1>
   <h2 id="bakeryName" style="cursor: pointer; color: #fff8dc; text-shadow: 1px 1px 3px #000;">Piekarnia <span id="bakeryOwner"></span></h2>
-  <button id="cookieBtn" title="Kliknij, aby zdobyć ciastko!">🍪</button>
+<button id="cookieBtn" title="Kliknij, aby zdobyć ciastko!">
+  <img src="cookie.png" alt="Ciastko" id="cookieImg" draggable="false">
+</button>
   <div id="stats">
     Ciastka: <span id="count">0</span><br />
     Ciastka na sekundę: <span id="cps">0</span><br />
@@ -82,7 +86,9 @@
   <div id="eventBox"></div>
   <div id="settingsMenu" style="display: none;">
     <h2 style="color: #f5dba7; text-shadow: 1px 1px 5px #000;">Ustawienia</h2>
-    <button id="closeSettings" style="position: absolute; top: 0px; right: 0px; background: transparent; border: none; font-size: 24px; color: white; cursor: pointer; box-shadow: initial;">✖️</button>
+    <button id="closeSettings" style="position: absolute; top: 0px; right: 0px; background: transparent; border: none; cursor: pointer; box-shadow: initial;">
+      <img src="close.png" alt="Zamknij" style="width: 32px; height: 32px;">
+    </button>
     <h3 style="color: #f5dba7; margin-top: 20px;">Dźwięk/Muzyka</h3>
     <label for="effectsVolumeControl" style="color: #fff8dc; text-shadow: 1px 1px 3px #000;">Głośność efektów:</label>
     <input id="effectsVolumeControl" type="range" min="0" max="1" step="0.1" value="1" />
@@ -98,7 +104,7 @@
           <button id="prevTrack" title="Poprzedni utwór">⏮</button>
           <button id="playPause" title="Odtwórz/Pauza">⏯</button>
           <button id="nextTrack" title="Następny utwór">⏭</button>
-          <button id="shuffleButton" title="Losowe odtwarzanie">🔀</button>
+          <button id="shuffleButton" title="Losowe odtwarzanie"><img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;"></button>
         </div>
       </div>
     </div>

@@ -338,7 +338,7 @@ backgroundMusic.play()
 // --- Funkcja do przełączania trybu shuffle ---
 function toggleShuffle() {
   isShuffle = !isShuffle;
-  shuffleButton.textContent = isShuffle ? '🔀 (ON)' : '🔀 (OFF)';
+  shuffleButton.innerHTML = `<img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;"> ${isShuffle ? '(ON)' : '(OFF)'}`;
   shuffleButton.style.color = isShuffle ? 'green' : 'red';
   saveSoundSettings();
 }
@@ -512,7 +512,7 @@ function loadSoundSettings() {
     
     // Wczytaj ustawienia shuffle
     isShuffle = soundSettings.isShuffle || false;
-    shuffleButton.textContent = isShuffle ? '🔀 (ON)' : '🔀 (OFF)';
+    shuffleButton.innerHTML = `<img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;"> ${isShuffle ? '(ON)' : '(OFF)'}`;
     shuffleButton.style.color = isShuffle ? 'green' : 'red';
 
     backgroundMusic.src = playlist[currentTrackIndex].src;
@@ -525,7 +525,7 @@ function loadSoundSettings() {
   } else {
     // --- DOMYŚLNE USTAWIENIA PRZY PIERWSZYM URUCHOMIENIU ---
     isShuffle = false;
-    shuffleButton.textContent = '🔀 (OFF)';
+    shuffleButton.innerHTML = `<img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;"> (OFF)`;
     shuffleButton.style.color = 'red';
     isPlaying = false;
     musicEnabledFlag = true;
@@ -784,7 +784,7 @@ function createUpgradeItem(upgrade, container, type) {
       : `Sprzedaj x${sellAmount}`;
     btn.classList.add('sell-action-btn');
     btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
-    btn.style.boxShadow = '0 2px #990000';
+    btn.style.boxShadow = '0 4px #990000';
     btn.disabled = upgrade.count === 0;
     if (upgrade.count < 0) {
       btn.style.background = '#bfbfbf';
@@ -1086,7 +1086,7 @@ function createAutoCookieAnimation(numCookies) {
     cookie.style.position = 'absolute';
     cookie.style.left = `${centerX - 8}px`; // -8px bo font-size: 16px
     cookie.style.top = `${centerY - 8}px`;
-    cookie.textContent = '🍪';
+    cookie.innerHTML = `<img src="cookie.png" alt="Ciastko" style="width:16px;vertical-align:middle;">`;
 
     if (eventMultiplier > 1 && cookieCounter % 2 === 0) {
       cookie.style.filter = "invert(44%) sepia(37%) saturate(1117%) hue-rotate(181deg) brightness(104%) contrast(109%)";
@@ -1096,7 +1096,7 @@ function createAutoCookieAnimation(numCookies) {
     cookieCounter++;
     document.body.appendChild(cookie);
 
-    cookie.offsetWidth;
+    window.getComputedStyle(cookie).opacity;
 
     requestAnimationFrame(() => {
       cookie.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.5)`;
@@ -1179,7 +1179,7 @@ function updateButtons() {
           } else {
             btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
             btn.style.color = '';
-            btn.style.boxShadow = '0 2px #990000';
+            btn.style.boxShadow = '0 4px #990000';
             btn.style.cursor = 'pointer';
           }
         } else {
@@ -1221,7 +1221,7 @@ function updateButtons() {
           } else {
             btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
             btn.style.color = '';
-            btn.style.boxShadow = '0 2px #990000';
+            btn.style.boxShadow = '0 4px #990000';
             btn.style.cursor = 'pointer';
           }
         } else {
