@@ -220,6 +220,8 @@ const settingsOnSound = document.getElementById('settingsOnSound');
 const settingsOffSound = document.getElementById('settingsOffSound');
 const backgroundMusic = document.getElementById('backgroundMusic');
 const shuffleButton = document.getElementById('shuffleButton');
+const playPause = document.getElementById('playPause');
+const playPauseIcon = document.getElementById('playPauseIcon');
 
 // --- Playlista ---
 const playlist = [
@@ -274,19 +276,18 @@ function playRandomTrack() {
 function playCurrentTrack() {
   backgroundMusic.src = playlist[currentTrackIndex].src;
   backgroundMusic.load();
-  
-  // Jeśli muzyka powinna być odtwarzana, spróbuj włączyć
+
   if (isPlaying) {
     backgroundMusic.play()
-    .then(() => {
-      playPauseBtn.textContent = '⏸';
-      if (!isResuming || trackChangedDuringPause) showNowPlayingNotification();
-      isResuming = false;
-      trackChangedDuringPause = false; // resetuj flagę po pokazaniu
-    })
+      .then(() => {
+        playPauseIcon.src = 'pause.png';
+        playPauseIcon.alt = 'Pauza';
+        if (!isResuming || trackChangedDuringPause) showNowPlayingNotification();
+        isResuming = false;
+        trackChangedDuringPause = false;
+      })
       .catch(e => console.log("Błąd odtwarzania w playCurrentTrack:", e));
   }
-  
   updateTrackDisplay();
   saveSoundSettings();
 }
@@ -302,44 +303,45 @@ function updateTrackDisplay() {
 }
 
 function togglePlayPause() {
-    if (isPlaying) {
-        backgroundMusic.pause();
-        playPauseBtn.textContent = '⏯';
-        isPlaying = false;
-        isResuming = true;
-        musicEnabledFlag = false; // Ustaw na false przy pauzowaniu
+  if (isPlaying) {
+    backgroundMusic.pause();
+    playPauseIcon.src = 'play.png';
+    playPauseIcon.alt = 'Odtwórz';
+    isPlaying = false;
+    isResuming = true;
+    musicEnabledFlag = false;
+  } else {
+    musicEnabledFlag = true;
+    if (!firstClickOccurred) {
+      handleFirstInteraction();
     } else {
-        // Ustaw flagę na true przy włączaniu odtwarzania
-        musicEnabledFlag = true;
-        
-        if (!firstClickOccurred) {
-            handleFirstInteraction();
-        } else {
-backgroundMusic.play()
-  .then(() => {
-    playPauseBtn.textContent = '⏸';
-    isPlaying = true;
-    if (trackChangedDuringPause || !isResuming) {
-      showNowPlayingNotification();
+      backgroundMusic.play()
+        .then(() => {
+          playPauseIcon.src = 'pause.png';
+          playPauseIcon.alt = 'Pauza';
+          isPlaying = true;
+          if (trackChangedDuringPause || !isResuming) {
+            showNowPlayingNotification();
+          }
+          trackChangedDuringPause = false;
+          isResuming = false;
+        })
+        .catch(e => {
+          console.log("Błąd odtwarzania:", e);
+          playPauseIcon.src = 'play.png';
+          playPauseIcon.alt = 'Odtwórz';
+          isPlaying = false;
+        });
     }
-    trackChangedDuringPause = false; // <-- przenieś tutaj
-    isResuming = false;
-  })
-                .catch(e => {
-                    console.log("Błąd odtwarzania:", e);
-                    playPauseBtn.textContent = '⏯';
-                    isPlaying = false;
-                });
-        }
-    }
-    saveSoundSettings();
+  }
+  saveSoundSettings();
 }
 
 // --- Funkcja do przełączania trybu shuffle ---
 function toggleShuffle() {
   isShuffle = !isShuffle;
-  shuffleButton.innerHTML = `<img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;"> ${isShuffle ? '(ON)' : '(OFF)'}`;
-  shuffleButton.style.color = isShuffle ? 'green' : 'red';
+  shuffleButton.innerHTML = `<img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;">`;
+  shuffleButton.style.background = isShuffle ? 'linear-gradient(90deg, #4caf50, #388e3c)' : 'linear-gradient(90deg, #ff5252, #b71c1c)';
   saveSoundSettings();
 }
 
@@ -366,7 +368,8 @@ function playNextTrack() {
     backgroundMusic.play()
       .then(() => {
         isPlaying = true;
-        playPauseBtn.textContent = '⏸';
+        playPauseIcon.src = 'pause.png';
+        playPauseIcon.alt = 'Pauza';
         showNowPlayingNotification();
       })
       .catch(e => console.log("Błąd odtwarzania po next:", e));
@@ -397,7 +400,8 @@ function playPrevTrack() {
     backgroundMusic.play()
       .then(() => {
         isPlaying = true;
-        playPauseBtn.textContent = '⏸';
+        playPauseIcon.src = 'pause.png';
+        playPauseIcon.alt = 'Pauza';
         showNowPlayingNotification();
       })
       .catch(e => console.log("Błąd odtwarzania po prev:", e));
@@ -412,7 +416,8 @@ function initMusicPlayer() {
     if (isPlaying && firstClickOccurred) {
       backgroundMusic.play()
         .then(() => {
-          playPauseBtn.textContent = '⏸';
+        playPauseIcon.src = 'pause.png';
+        playPauseIcon.alt = 'Pauza';
           showNowPlayingNotification();
         })
         .catch(e => console.log("Błąd odtwarzania po zakończeniu:", e));
@@ -512,24 +517,26 @@ function loadSoundSettings() {
     
     // Wczytaj ustawienia shuffle
     isShuffle = soundSettings.isShuffle || false;
-    shuffleButton.innerHTML = `<img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;"> ${isShuffle ? '(ON)' : '(OFF)'}`;
-    shuffleButton.style.color = isShuffle ? 'green' : 'red';
+    shuffleButton.innerHTML = `<img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;">`;
+    shuffleButton.style.background = isShuffle ? 'linear-gradient(90deg, #4caf50, #388e3c)' : 'linear-gradient(90deg, #ff5252, #b71c1c)';
 
     backgroundMusic.src = playlist[currentTrackIndex].src;
     backgroundMusic.load();
     
-    playPauseBtn.textContent = isPlaying ? '⏸' : '⏯';
+    playPauseIcon.src = isPlaying ? 'pause.png' : 'play.png';
+    playPauseIcon.alt = isPlaying ? 'Pauza' : 'Odtwórz';
     
     updateTrackDisplay();
     
   } else {
     // --- DOMYŚLNE USTAWIENIA PRZY PIERWSZYM URUCHOMIENIU ---
     isShuffle = false;
-    shuffleButton.innerHTML = `<img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;"> (OFF)`;
-    shuffleButton.style.color = 'red';
+    shuffleButton.innerHTML = `<img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;">`;
+    shuffleButton.style.background = 'linear-gradient(90deg, #ff5252, #b71c1c)';
     isPlaying = false;
     musicEnabledFlag = true;
-    playPauseBtn.textContent = '⏯';
+    playPauseIcon.src = 'play.png';
+    playPauseIcon.alt = 'Odtwórz';
     backgroundMusic.src = playlist[0].src;
     backgroundMusic.load();
     updateTrackDisplay();
@@ -544,7 +551,8 @@ function handleFirstInteraction() {
     if (musicEnabledFlag) {
         backgroundMusic.play()
             .then(() => {
-                playPauseBtn.textContent = '⏸';
+                playPauseIcon.src = 'pause.png';
+                playPauseIcon.alt = 'Pauza';
                 isPlaying = true;
                 showNowPlayingNotification();
             })

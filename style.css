@@ -544,7 +544,6 @@ input[type=range]::-ms-thumb {
 #closeSettings {
   margin: 15px 15px 0 0 !important;
   float: right;
-
   padding: 5px 10px !important;
   transition: background 0.3s ease !important;
 }
@@ -620,6 +619,11 @@ input[type=range]::-ms-thumb {
   font-size: 16px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   transition: transform 0.1s;
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 #musicControls button:hover {
   transform: scale(1.1);
@@ -692,6 +696,13 @@ input[type=range]::-ms-thumb {
 }
 #promoCodeMessage:empty {
   min-height: 0 !important; /* Ukryj gdy puste */
+}
+#musicControls button img {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+  margin: 0;
+  padding: 0;
 }
 @media (max-height: 920px) {
   #settingsMenu {

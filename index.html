@@ -101,10 +101,18 @@
         <img id="albumCover" src="" alt="Okładka albumu" style="width: 150px; height: 150px; border-radius: 8px; display: none; margin: 0 auto 10px;">
         <p>Aktualny utwór: <span id="currentTrack">[brak]</span></p>
         <div id="musicControls" style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
-          <button id="prevTrack" title="Poprzedni utwór">⏮</button>
-          <button id="playPause" title="Odtwórz/Pauza">⏯</button>
-          <button id="nextTrack" title="Następny utwór">⏭</button>
-          <button id="shuffleButton" title="Losowe odtwarzanie"><img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;"></button>
+          <button id="prevTrack" title="Poprzedni utwór">
+            <img src="last.png" alt="Poprzedni" style="width:20px;height:20px;">
+          </button>
+          <button id="playPause" title="Odtwórz/Pauza">
+            <img id="playPauseIcon" src="play.png" alt="Odtwórz" style="width:20px;height:20px;">
+          </button>
+          <button id="nextTrack" title="Następny utwór">
+            <img src="next.png" alt="Następny" style="width:20px;height:20px;">
+          </button>
+          <button id="shuffleButton" title="Losowe odtwarzanie">
+            <img src="shuffle.png" alt="Shuffle" style="width:20px;height:20px;vertical-align:middle;">
+          </button>
         </div>
       </div>
     </div>
@@ -124,7 +132,7 @@
       <button id="resetProgress">Zresetuj grę</button>
       <p style="margin-top: 30px;">Ostatni auto-zapis: <span id="lastSaveTime">Nigdy</span></p>
     </div>
-    <p style="text-align: right; font-size: 12px; color: #bbbbbb; margin-top: 25px;">Wersja: V21 | Autor: Wojciech Pielok</p>
+    <p style="text-align: right; font-size: 12px; color: #bbbbbb; margin-top: 25px;">Wersja: V22 | Autor: Wojciech Pielok</p>
   </div>
   <script src="script.js"></script>
 </body>
