@@ -1119,7 +1119,7 @@ function createAutoCookieAnimation(numCookies) {
 
 // --- Aktualizacja wyświetlanych wartości ---
 function updateDisplay() {
-  countEl.textContent = formatNumber(count);
+  countEl.textContent = formatNumber(Math.floor(count));
   
   const heavenlyMultiplier = getHeavenlyMultiplier();
   const cpsValue = cps * eventMultiplier * heavenlyMultiplier;
@@ -1130,8 +1130,7 @@ function updateDisplay() {
   clickValueEl.textContent = formatNumber(clickValueTotal);
   
   multiplierEl.textContent = Number.isInteger(eventMultiplier) ? eventMultiplier + "x" : eventMultiplier.toFixed(2) + "x";
-  sessionCountEl.textContent = formatNumber(cookiesBakedThisAscension);
-  updateButtons();
+  sessionCountEl.textContent = formatNumber(Math.floor(cookiesBakedThisAscension));  updateButtons();
   playTimeEl.textContent = formatPlayTime(playTimeSeconds);
   
   const ascendBtn = document.getElementById('ascendBtn');
