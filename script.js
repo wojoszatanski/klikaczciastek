@@ -190,6 +190,7 @@ document.getElementById('redeemPromoCode').addEventListener('click', function() 
 document.getElementById('promoCodeInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     document.getElementById('redeemPromoCode').click();
+    this.blur(); // Zamknij klawiaturę na mobile
   }
 });
 
@@ -785,6 +786,7 @@ function createUpgradeItem(upgrade, container, type) {
   }
 
   const btn = document.createElement('button');
+  btn.id = `upgrade-btn-${upgrade.id}`;
 
   if (isSellMode) {
     btn.textContent = sellAmount === 'all'
@@ -1173,87 +1175,83 @@ function updateButtons() {
     !document.querySelector('.buyAmountBtn.active');
 
   upgrades.forEach(upg => {
-    const buttons = upgradesDiv.querySelectorAll('button');
-    buttons.forEach(btn => {
-      if(btn.previousSibling.textContent.includes(upg.name)) {
-        if (isSellMode) {
-          // Tryb sprzedaży: aktywuj jeśli można sprzedać
-          btn.disabled = upg.count === 0;
-          if (upg.count === 0) {
-            btn.style.background = '#bfbfbf';
-            btn.style.color = '#666';
-            btn.style.boxShadow = 'none';
-            btn.style.cursor = 'not-allowed';
-          } else {
-            btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
-            btn.style.color = '';
-            btn.style.boxShadow = '0 4px #990000';
-            btn.style.cursor = 'pointer';
-          }
-        } else {
-          // Tryb kupna: dezaktywuj jeśli nie stać
-          let totalCost = 0;
-          let tempCost = upg.cost;
-          for (let i = 0; i < buyAmount; i++) {
-            totalCost += Math.ceil(tempCost * (1 - costReduction));
-            tempCost = Math.ceil(tempCost * 1.2);
-          }
-          btn.disabled = count < totalCost;
-          if (count < totalCost) {
-            btn.style.background = '#bfbfbf';
-            btn.style.color = '#666';
-            btn.style.boxShadow = 'none';
-            btn.style.cursor = 'not-allowed';
-          } else {
-            btn.style.background = '';
-            btn.style.color = '';
-            btn.style.boxShadow = '';
-            btn.style.cursor = '';
-          }
-        }
+    const btn = document.getElementById(`upgrade-btn-${upg.id}`);
+    if (!btn) return;
+
+    if (isSellMode) {
+      // Tryb sprzedaży: aktywuj jeśli można sprzedać
+      btn.disabled = upg.count === 0;
+      if (upg.count === 0) {
+        btn.style.background = '#bfbfbf';
+        btn.style.color = '#666';
+        btn.style.boxShadow = 'none';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
+        btn.style.color = '';
+        btn.style.boxShadow = '0 4px #990000';
+        btn.style.cursor = 'pointer';
       }
-    });
+    } else {
+      // Tryb kupna: dezaktywuj jeśli nie stać
+      let totalCost = 0;
+      let tempCost = upg.cost;
+      for (let i = 0; i < buyAmount; i++) {
+        totalCost += Math.ceil(tempCost * (1 - costReduction));
+        tempCost = Math.ceil(tempCost * 1.2);
+      }
+      btn.disabled = count < totalCost;
+      if (count < totalCost) {
+        btn.style.background = '#bfbfbf';
+        btn.style.color = '#666';
+        btn.style.boxShadow = 'none';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.boxShadow = '';
+        btn.style.cursor = '';
+      }
+    }
   });
 
   cursorUpgrades.forEach(upg => {
-    const buttons = cursorUpgradesDiv.querySelectorAll('button');
-    buttons.forEach(btn => {
-      if(btn.previousSibling.textContent.includes(upg.name)) {
-        if (isSellMode) {
-          btn.disabled = upg.count === 0;
-          if (upg.count === 0) {
-            btn.style.background = '#bfbfbf';
-            btn.style.color = '#666';
-            btn.style.boxShadow = 'none';
-            btn.style.cursor = 'not-allowed';
-          } else {
-            btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
-            btn.style.color = '';
-            btn.style.boxShadow = '0 4px #990000';
-            btn.style.cursor = 'pointer';
-          }
-        } else {
-          let totalCost = 0;
-          let tempCost = upg.cost;
-          for (let i = 0; i < buyAmount; i++) {
-            totalCost += Math.ceil(tempCost * (1 - costReduction));
-            tempCost = Math.ceil(tempCost * 2.5);
-          }
-          btn.disabled = count < totalCost;
-          if (count < totalCost) {
-            btn.style.background = '#bfbfbf';
-            btn.style.color = '#666';
-            btn.style.boxShadow = 'none';
-            btn.style.cursor = 'not-allowed';
-          } else {
-            btn.style.background = '';
-            btn.style.color = '';
-            btn.style.boxShadow = '';
-            btn.style.cursor = '';
-          }
-        }
+    const btn = document.getElementById(`upgrade-btn-${upg.id}`);
+    if (!btn) return;
+
+    if (isSellMode) {
+      btn.disabled = upg.count === 0;
+      if (upg.count === 0) {
+        btn.style.background = '#bfbfbf';
+        btn.style.color = '#666';
+        btn.style.boxShadow = 'none';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.style.background = 'linear-gradient(145deg, #ff5c5c, #cc0000)';
+        btn.style.color = '';
+        btn.style.boxShadow = '0 4px #990000';
+        btn.style.cursor = 'pointer';
       }
-    });
+    } else {
+      let totalCost = 0;
+      let tempCost = upg.cost;
+      for (let i = 0; i < buyAmount; i++) {
+        totalCost += Math.ceil(tempCost * (1 - costReduction));
+        tempCost = Math.ceil(tempCost * 2.5);
+      }
+      btn.disabled = count < totalCost;
+      if (count < totalCost) {
+        btn.style.background = '#bfbfbf';
+        btn.style.color = '#666';
+        btn.style.boxShadow = 'none';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.boxShadow = '';
+        btn.style.cursor = '';
+      }
+    }
   });
 }
 
@@ -1388,7 +1386,8 @@ function checkAchievements() {
 }
 
 function renderAchievements() {
-  achievementsList.innerHTML = '';
+  // Użyj fragmentu dokumentu, by ograniczyć reflow
+  const fragment = document.createDocumentFragment();
   achievements.forEach(ach => {
     const div = document.createElement('div');
     div.className = 'achievement' + (ach.unlocked ? ' unlocked' : '');
@@ -1400,8 +1399,10 @@ function renderAchievements() {
     description.style.color = '#88cc88';
     div.appendChild(title);
     div.appendChild(description);
-    achievementsList.appendChild(div);
+    fragment.appendChild(div);
   });
+  achievementsList.innerHTML = '';
+  achievementsList.appendChild(fragment);
 }
 
 function generateRandomName() {
@@ -1478,6 +1479,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // --- ODCZYTAJ TRYB KUPNA/SPRZEDAŻY I ILOŚĆ ---
   const savedMode = JSON.parse(localStorage.getItem('cookieClickerBuySellMode') || '{}');
   if (savedMode.mode === 'buy') {
+
     buyAmount = savedMode.amount || 1;
     document.querySelectorAll('.buyAmountBtn').forEach(b => {
       b.classList.toggle('active', parseInt(b.dataset.amount, 10) === buyAmount);
