@@ -14,6 +14,7 @@ let isResuming = false;
 let lastEventTime = 0;
 let buyAmount = 1;
 let sellAmount = 1;
+let tickCounter = 0;
 const MIN_EVENT_INTERVAL = 300000; // Minimalny interwał między eventami (5 minut)
 
 // --- Nowy licznik ciastek upieczonych w sesji ---
@@ -1119,19 +1120,21 @@ function createAutoCookieAnimation(numCookies) {
 
 // --- Aktualizacja wyświetlanych wartości ---
 function updateDisplay() {
-  countEl.textContent = formatNumber(Math.floor(count));
+  // Zamiast bezpośrednio ustawiać textContent, zbierz zmiany i ustaw na końcu
+  let updates = [];
+  updates.push(() => countEl.textContent = formatNumber(Math.floor(count)));
   
   const heavenlyMultiplier = getHeavenlyMultiplier();
   const cpsValue = cps * eventMultiplier * heavenlyMultiplier;
-  cpsEl.textContent = formatNumber(cpsValue);
+  updates.push(() => cpsEl.textContent = formatNumber(cpsValue));
   
   const heavenlyClickValue = getHeavenlyClickValue();
   const clickValueTotal = (clickValue + heavenlyClickValue) * eventMultiplier;
-  clickValueEl.textContent = formatNumber(clickValueTotal);
+  updates.push(() => clickValueEl.textContent = formatNumber(clickValueTotal));
   
-  multiplierEl.textContent = Number.isInteger(eventMultiplier) ? eventMultiplier + "x" : eventMultiplier.toFixed(2) + "x";
-  sessionCountEl.textContent = formatNumber(Math.floor(cookiesBakedThisAscension));  updateButtons();
-  playTimeEl.textContent = formatPlayTime(playTimeSeconds);
+  updates.push(() => multiplierEl.textContent = Number.isInteger(eventMultiplier) ? eventMultiplier + "x" : eventMultiplier.toFixed(2) + "x");
+  updates.push(() => sessionCountEl.textContent = formatNumber(Math.floor(cookiesBakedThisAscension)));  updateButtons();
+  updates.push(() => playTimeEl.textContent = formatPlayTime(playTimeSeconds));
   
   const ascendBtn = document.getElementById('ascendBtn');
   const canAscend = cookiesBakedThisAscension >= ASCENSION_THRESHOLD;
@@ -1159,6 +1162,8 @@ function updateDisplay() {
     clickValueEl.style.color = '#5d3a00';
     multiplierEl.style.color = '#5d3a00';
   }
+
+  updates.forEach(fn => fn());
 }
 
 function formatPlayTime(seconds) {
@@ -1795,17 +1800,13 @@ function resetGame() {
 // --- Pętla gry ---
 setInterval(() => {
   addCookiesPerSecond();
+  tickCounter++;
+  if (tickCounter % 10 === 0) startRandomEvent(); // co sekundę
+  if (tickCounter % 10 === 0) {
+    playTimeSeconds++;
+    updateDisplay();
+  }
 }, 100);
-
-// Sprawdzaj eventy tylko co sekundę
-setInterval(() => {
-  startRandomEvent();
-}, 1000);
-
-setInterval(() => {
-  playTimeSeconds++;
-  updateDisplay();
-}, 1000);
 
 // --- Inicjalizacja ---
 renderHeavenlyUpgrades();
